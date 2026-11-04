@@ -72,5 +72,22 @@ test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook in the 
     for(const q of ['lop','NHÓM LỚP','nhom lop']){search.value=q;search.dispatchEvent(new d.defaultView.Event('input'));assert.equal(zaloRow.hidden,false,q);}
     search.value='';search.dispatchEvent(new d.defaultView.Event('input'));await tick();
     assert.equal(unread.querySelectorAll('.ym-unread-row').length,2,'an empty search shows every unread row again');
+
+    // Zalo official accounts and Facebook Pages: their own unread list, after the people's.
+    const business=box.querySelector('.ym-unread-business');
+    assert.ok(business.hidden,'no OA / Page list while none is unread');
+    const oa=d.createElement('button');oa.className='contact-row';oa.dataset.ymBusiness='OA';oa.innerHTML='<span class="contact-text"><span class="contact-first"><b>Nhà thuốc Demo</b><span class="contact-unread">●</span></span></span>';
+    slot.append(oa);
+    hubPorts[0].server.postMessage({type:'state',sources:[{...fb,entries:[...fb.entries,{key:'/messages/t/711900000000001',name:'Shop Demo',group:'Page',unread:true,avatar:'',time:''}]}]});await tick(10);
+    const shopRow=sections[2].querySelector('.contact-row[data-ym-key="/messages/t/711900000000001"]');
+    assert.equal(shopRow.dataset.ymBusiness,'Page');assert.equal(shopRow.querySelector('.presence-dot'),null,'a Page has no online face');
+    assert.match(shopRow.querySelector('.contact-first').textContent,/Shop Demo.*Page/);
+    assert.equal([...sections[2].querySelectorAll('summary')].at(-1).textContent,'Page (1)','Pages last in the Facebook list');
+    assert.equal(unread.querySelector('.ym-unread-head').textContent,'▾Chưa đọc (2)','people only');
+    assert.equal(business.querySelector('.ym-unread-head').textContent,'▾OA / Page chưa đọc (2)');
+    assert.deepEqual([...business.querySelectorAll('.ym-unread-row')].map(c=>[c.dataset.app,c.querySelector('.contact-first b').textContent,c.title]),[['zalo','Nhà thuốc Demo','Zalo OA: Nhà thuốc Demo'],['facebook','Shop Demo','Facebook Page: Shop Demo']]);
+    assert.equal(unread.nextElementSibling,business,'right after Chưa đọc');
+    business.querySelector('.ym-unread-head').click();assert.ok(business.hasAttribute('data-folded'));
+    await tick();assert.equal(stored.ymBuddyFolded.unreadBusiness,true,'folded on its own, remembered');assert.ok(!unread.hasAttribute('data-folded'));
   }finally{dom.window.close();}
 });

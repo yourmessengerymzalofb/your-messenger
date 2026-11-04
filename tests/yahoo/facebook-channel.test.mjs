@@ -53,6 +53,11 @@ test('Facebook gets its own dark-blue buddy window and Yahoo chat windows mirror
     assert.equal(q('chat-title').textContent,'Lan Anh — Facebook');
     const lines=[...q('messages').querySelectorAll('.message-line')].map(n=>n.textContent);
     assert.match(lines[0],/^Lan Anh:chào bạn/);
+    // A meeting link is a link to click, opening in a new tab.
+    push(fb({transcript:{key:'/messages/t/1',title:'Lan Anh',status:'',canSend:true,messages:[{id:'1',from:'peer',sender:'Lan Anh',text:'Họp nè https://meet.google.com/abc-defg-hij.',time:'9:00',kind:'text',images:[]}]}}));
+    const meet=q('messages').querySelector('.message-body a.ym-chat-link');
+    assert.equal(meet.getAttribute('href'),'https://meet.google.com/abc-defg-hij');assert.equal(meet.target,'_blank');assert.match(meet.rel,/noopener/);
+    assert.equal(q('messages').querySelector('.message-body').textContent,'Họp nè https://meet.google.com/abc-defg-hij.');
     // A photo the Facebook tab sent along shows as a picture, not a placeholder.
     push(fb({transcript:{key:'/messages/t/1',title:'Lan Anh',status:'',canSend:true,messages:[{id:'1',from:'peer',sender:'Lan Anh',text:'',time:'9:00',kind:'image',images:['https://scontent.example/photo.jpg']}]}}));
     const photo=q('messages').querySelector('.ym-fb-photos img');assert.equal(photo.getAttribute('src'),'https://scontent.example/photo.jpg');assert.equal(photo.referrerPolicy,'no-referrer');assert.doesNotMatch(q('messages').textContent,/xem trên Facebook/);

@@ -25,12 +25,30 @@
       const key=threadKey(a.getAttribute('href'));if(seen.has(key))continue;seen.add(key);
       const name=linkName(a);if(!name)continue;
       const img=a.querySelector('img'),label=a.getAttribute('aria-label')||'';
-      const group=typeof globalThis.YahooRetroClassifyBuddy==='function'?globalThis.YahooRetroClassifyBuddy(a,false):'Chưa rõ trạng thái';
+      let group=typeof globalThis.YahooRetroClassifyBuddy==='function'?globalThis.YahooRetroClassifyBuddy(a,false):'Chưa rõ trạng thái';
+      if(group!=='Group'&&isPage(key))group='Page';
       out.push({link:a,key,name,group,unread:/Unread message|Tin nhắn chưa đọc|Chưa đọc/i.test(label+' '+a.textContent),avatar:img?.currentSrc||img?.src||''});
     }
     return out;
   }
   const activeKey=()=>location.pathname.match(THREAD)?.[0]||'';
+  // Facebook Pages (shops, brands, bots) look like people in Facebook's list: same row, no badge.
+  // As observed on facebook.com/messages: a chat with a person is end-to-end encrypted
+  // (/messages/e2ee/t/…) or, when older, numbered with the person's account id (1000…, 15 digits);
+  // a Page's chat is neither. The conversation open on the page settles it: a Page has "Page
+  // options" in its header, a person has call buttons. What was seen is kept for this page's life.
+  const seen=new Map();
+  function isPage(key){
+    if(seen.has(key))return seen.get(key)==='Page';
+    if(/^\/messages\/e2ee\//.test(key))return false;
+    const id=key.match(/^\/messages\/t\/(\d{15,16})$/)?.[1];
+    return !!id&&!/^1000\d{11}$/.test(id);
+  }
+  function learn(root){
+    const key=activeKey();if(!key||!root)return;
+    if(root.querySelector('[aria-label="Page options"],[aria-label="Tùy chọn Trang"]'))seen.set(key,'Page');
+    else if(A?.resolve?.(root,'voice')||A?.resolve?.(root,'video'))seen.set(key,'person');
+  }
   function messages(root){
     const history=root.querySelector('[role="log"]')||root.querySelector('[role="grid"]');if(!history)return [];
     const out=[];
@@ -46,17 +64,26 @@
       const time=typeof globalThis.YahooRetroDisplayTime==='function'?globalThis.YahooRetroDisplayTime(match[1]):match[1];
       // Call cards: a heading (Missed audio call…) and the call's time, which is not message text.
       const call=callName([...body.querySelectorAll('h3')].filter(native).map(h=>clean(h.textContent)).find(t=>CALL.test(t))||'');
-      if(call){out.push({id:article.id||'a'+out.length,from:me?'me':'peer',sender:me?'':sender,text:call,time,kind:'call',images:[]});continue;}
+      if(call){out.push({call:{id:article.id||'a'+out.length,from:me?'me':'peer',sender:me?'':sender,text:call,time,kind:'call',images:[]}});continue;}
       const lines=[...body.querySelectorAll('[dir="auto"]')].filter(n=>native(n)&&!n.closest('button,[role="button"],a,h1,h2,h3,h4,h5,h6,[role="heading"]')&&![...n.querySelectorAll('[dir="auto"]')].length).map(n=>textOf(n).trim()).filter(Boolean);
       // Facebook's delivery line under your last message (Sent, Seen…) is not part of the message.
       while(me&&lines.length&&STATUS_LINE.test(lines.at(-1)))lines.pop();
-      const text=lines.join('\n'),images=photos(body,sender);
-      const kind=text?'text':images.length?'image':body.querySelector('img,video')?'image':'other';
-      out.push({id:article.id||'a'+out.length,from:me?'me':'peer',sender:me?'':sender,text,time,kind,images});
+      // A shared link (Google Meet, a news page…): its address, not the preview card's picture.
+      for(const url of outside(body))if(!bare(lines.join(' ')).includes(bare(url)))lines.push(url);
+      // What Facebook's own envelope says was sent ("…by Hung: 👍"): the big Like and other pictures
+      // Facebook draws as vector art have no text or photo of their own in the page.
+      const said=clean(receipt.slice(match[0].length));
+      out.push({id:article.id||'a'+out.length,me,sender,lines,time,body,said});
     }
-    // Pictures only for the latest messages: each snapshot crosses to the Zalo tab.
-    for(const m of out.slice(0,-PHOTO_MESSAGES))m.images=[];
-    return out;
+    // Every snapshot crosses to the Zalo tab: photo addresses (short) for every message, pictures
+    // copied out of the page (encrypted chats, tens of KB each) only for the latest messages.
+    return out.map((m,i)=>{
+      if(m.call)return m.call;
+      const images=photos(m.body,m.sender,{encoded:i>=out.length-PHOTO_MESSAGES});
+      const text=m.lines.join('\n')||(!images.length&&!media(m.body)?m.said:'');
+      const kind=text?'text':images.length||media(m.body)?'image':'other';
+      return {id:m.id,from:m.me?'me':'peer',sender:m.me?'':m.sender,text,time:m.time,kind,images};
+    });
   }
   // "Sent", "Sent 1m ago", "Seen by Lan", "Đã xem 5 phút trước"…
   const STATUS_LINE=/^(Sending|Sent|Delivered|Seen|Đang gửi|Đã gửi|Đã nhận|Đã xem)(\s+(\d+\s*\S+\s+(ago|trước)|just now|vừa xong|by .+|bởi .+))?$/i;
@@ -71,16 +98,50 @@
   // Photos of a message, as shown on this page: an https picture address as is; a picture decrypted
   // in the page (end-to-end encrypted chats: data: or blob:, often hundreds of KB) as a small JPEG.
   const PHOTO_MESSAGES=15,thumbs=new Map();
-  function photos(body,sender=''){
+  // Where a link in a message goes: Facebook wraps outside addresses in l.facebook.com/l.php?u=….
+  // '' for Facebook's own pages (a photo viewer, a profile) and anything not http(s).
+  function target(a){
+    try{
+      let u=new URL(a.getAttribute('href')||'',location.href);
+      if(/^l[m]?\.facebook\.com$/.test(u.hostname)&&u.searchParams.get('u'))u=new URL(u.searchParams.get('u'));
+      if(!/^https?:$/.test(u.protocol)||/(^|\.)(facebook\.com|messenger\.com|fbcdn\.net)$/.test(u.hostname))return '';
+      // Facebook's tracking parameter on outgoing links.
+      u.searchParams.delete('fbclid');
+      return u.href;
+    }catch{return '';}
+  }
+  // An address as people write it: "meet.google.com/abc" and "https://meet.google.com/abc/" match.
+  const bare=s=>s.toLowerCase().replace(/\bhttps?:\/\/(www\.)?/g,'').replace(/\/(?=\s|$)/g,'');
+  function outside(body){return [...new Set([...body.querySelectorAll('a[href]')].filter(native).map(target).filter(Boolean))].slice(0,4);}
+  // A video, or a picture that is not an emoji, an icon or the sender's small profile picture.
+  function media(body){
+    return [...body.querySelectorAll('img,video')].some(n=>native(n)&&(n.tagName==='VIDEO'||(!/^https:\/\/static\.[^/]*fbcdn\.net\//.test(n.currentSrc||n.src||'')&&!(n.width>0&&n.width<40)&&!(n.height>0&&n.height<40))));
+  }
+  // A background tab often has not loaded a photo yet when the snapshot is read, and a picture
+  // finishing its load changes nothing the bridge watches: publish again once it has loaded.
+  const waiting=new WeakSet();
+  function later(img){if(waiting.has(img))return;waiting.add(img);img.addEventListener('load',()=>globalThis.YahooHubFacebook?.bridge?.publish?.(),{once:true});}
+  // Size as drawn on the page, else as loaded, else as the markup says (0: not known).
+  const size=(img,k)=>img[k]||(img.complete?img['natural'+k[0].toUpperCase()+k.slice(1)]:0)||+img.getAttribute(k)||0;
+  function photos(body,sender='',{encoded=true}={}){
     const out=[];
     for(const img of body.querySelectorAll('img')){
-      if(out.length>=4||!native(img)||!img.closest('[role="button"],a'))continue;
-      // The sender's small profile picture sits inside the message too (alt = their name, 28px).
-      if((sender&&clean(img.getAttribute('alt'))===sender)||(img.width>0&&img.width<40)||(img.height>0&&img.height<40))continue;
-      const src=img.currentSrc||img.src||'';
-      if(/^https:\/\/static\.[^/]*fbcdn\.net\//.test(src)||!img.complete||img.naturalWidth<40||img.naturalHeight<40)continue;
-      const shown=/^https:/.test(src)?src:/^(data|blob):/.test(src)?thumb(img,src):'';
-      if(shown)out.push(shown);
+      if(out.length>=4||!native(img))continue;
+      // A link's preview picture (the Google Meet logo of a meeting link) is not a photo of the message.
+      const a=img.closest('a[href]');if(a&&target(a))continue;
+      const src=img.currentSrc||img.src||'',w=size(img,'width'),h=size(img,'height');
+      // Emoji and Facebook's own icons; the sender's small profile picture (alt = their name, 28px).
+      if(/^https:\/\/static\.[^/]*fbcdn\.net\//.test(src)||(sender&&clean(img.getAttribute('alt'))===sender))continue;
+      if((w&&w<40)||(h&&h<40))continue;
+      // A photo is a picture you can open (button or link), or one drawn large; Facebook's photo
+      // addresses (scontent…fbcdn.net) count even before their size is known.
+      const photoHost=/^https:\/\/[^/]*\.fbcdn\.net\//.test(src);
+      if(!w&&!h&&!photoHost){later(img);continue;}
+      if(!img.closest('[role="button"],a')&&!(w>=80&&h>=80)&&!photoHost)continue;
+      if(/^https:/.test(src)){out.push(src);continue;}
+      if(!/^(data|blob):/.test(src)||!encoded)continue;
+      if(!img.complete||img.naturalWidth<40||img.naturalHeight<40){later(img);continue;}
+      const shown=thumb(img,src);if(shown)out.push(shown);
     }
     return out;
   }
@@ -150,6 +211,7 @@
   }
   function read(){
     const state=detect();if(state!=='ready')return {state};
+    learn(main());
     const list=roster();
     return {state,entries:list.map(({link,...e})=>e),transcript:transcript(list),profile:profile()};
   }

@@ -70,7 +70,7 @@ function yahooLink(e){
   // Absolute links keep the browser's handling, except the Yahoo blog (bot messages link it in full).
   const raw=a.getAttribute('href'),relative=/^\/(?!\/|api\/)/.test(raw),href=relative?yahooHref(raw):a.href;
   if(!relative&&!blogHref(href))return;
-  e.preventDefault();goYahoo(href,e.button===1||e.ctrlKey||e.metaKey||e.shiftKey);
+  e.preventDefault();goYahoo(href,a.hasAttribute('data-ym-new-tab')||e.button===1||e.ctrlKey||e.metaKey||e.shiftKey);
 }
 YM_ROOT.addEventListener('click',yahooLink);YM_ROOT.addEventListener('auxclick',yahooLink);
 export const history={state:null,length:1,pushState(state){this.state=state;},replaceState(state){this.state=state;},back(){},forward(){},go(){}};

@@ -163,6 +163,11 @@ body>.zl-modal{z-index:2147483200!important}
 #ym-root .ym-facebook-chat .ym-fb-photos img{max-width:220px;max-height:180px;margin:0 4px 4px 0;border:1px solid #c9c9c9;border-radius:3px;vertical-align:top;background:#f4f4f4}
 #ym-root .ym-facebook-chat .ym-reveal{margin-left:auto}
 #ym-root .ym-facebook-chat .ym-placeholder{color:#6d7fa8;font-style:italic}
+/* Chat text can be selected and copied (Zalo's page turns selection off for what it does not mark). */
+#ym-root .messages,#ym-root .messages .message-line,#ym-root .messages .message-line *{-webkit-user-select:text;user-select:text}
+#ym-root .messages .message-line button{-webkit-user-select:none;user-select:none}
+#ym-root .messages a.ym-chat-link{color:#0645ad;text-decoration:underline;cursor:pointer;overflow-wrap:anywhere}
+#ym-root .messages a.ym-chat-link:visited{color:#5a2a9c}
 #ym-root .ym-mirror-notice{display:flex;align-items:center;gap:8px;padding:5px 8px;background:#fff8d8;border-bottom:1px solid #e4d79a;color:#5d4a00;font:11px Tahoma,sans-serif}
 #ym-root .ym-mirror-notice[hidden]{display:none}
 .ym-return{all:revert;position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:2147483000;width:26px;height:56px;padding:0;border:2px solid #fff;border-right:0;border-radius:8px 0 0 8px;background:#6134ad;color:#fff;font:bold 12px Tahoma,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer;opacity:.85}

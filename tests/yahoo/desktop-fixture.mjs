@@ -14,8 +14,9 @@ for(const name of ['setTimeout','setInterval']){const real=globalThis[name];glob
 // stored: chrome.storage.local at start (e.g. {ymBuddyLayout:'separate'}); the automatic guest Y! ID is off
 // unless a test turns it on (ymAutoGuest:true).
 // routes(message): a reply for other proxy calls ({status,body}), or nothing for 404.
-export async function zaloWithDesktop({account={authenticated:false},hub=false,stored:seed={},routes=()=>null}={}){
-  const dom=new JSDOM('<!doctype html><html><head><title>Zalo</title></head><body><div id="app"><div id="contact-search"><div class="group-search"><input placeholder="Tìm kiếm"></div></div><div id="conversationList">Zalo</div></div></body></html>',{url:'https://chat.zalo.me/',pretendToBeVisual:true});
+// signedIn:false: Zalo's page without its signed-in screen (no conversation list yet); boot is not awaited.
+export async function zaloWithDesktop({account={authenticated:false},hub=false,stored:seed={},routes=()=>null,signedIn=true}={}){
+  const dom=new JSDOM('<!doctype html><html><head><title>Zalo</title></head><body><div id="app"><div id="contact-search"><div class="group-search"><input placeholder="Tìm kiếm"></div></div>'+(signedIn?'<div id="conversationList">Zalo</div>':'')+'</div></body></html>',{url:'https://chat.zalo.me/',pretendToBeVisual:true});
   // The first-run terms count as accepted unless a test asks for them (ymTerms:undefined).
   const w=dom.window,requests=[],stored={ymAutoGuest:false,ymTerms:TERMS_VERSION,...seed};
   w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}});
@@ -34,6 +35,7 @@ export async function zaloWithDesktop({account={authenticated:false},hub=false,s
   const {boot}=await import(pathToFileURL(path.resolve('extension/yahoo/app/boot.js')).href);
   // boot() waits on the first-run terms dialog while they are not accepted: return once it is up.
   let booted=false;const booting=boot().then(()=>{booted=true;});
+  if(!signedIn){await tick(300);return {dom,w,d:w.document,requests,stored,skin,hubPorts,booting};}
   for(let t=Date.now();!booted&&!w.document.querySelector('.ym-terms-dialog')&&Date.now()-t<10000;)await tick(20);
   if(booted)await booting;await tick(300);
   return {dom,w,d:w.document,requests,stored,skin,hubPorts};

@@ -11,9 +11,19 @@ function blog(hash){
     return url.pathname==='/360'||(back&&/^\/360(?:\?|$)/.test(back))?url.href:null;
   }catch{return null;}
 }
+// A waiting screen covers the frame until the blog itself has loaded: with /?return360=…, Messenger's
+// page loads first (it checks the Y! session) and then opens the blog, which is the second load.
+// Should the blog not come (signed out, a slow line), the frame shows anyway after WAIT.
+const WAIT=12000;let timer=0,loads=0,needed=0;
+function ready(){clearTimeout(timer);needed=0;document.body.removeAttribute('data-waiting');}
+function loaded(){if(needed&&++loads>=needed)ready();}
 function show(){
   const url=blog(location.hash),frame=document.querySelector('iframe');
+  clearTimeout(timer);loads=0;needed=url?(new URL(url).pathname==='/'?2:1):0;
+  document.body.toggleAttribute('data-waiting',!!needed);
+  if(needed)timer=setTimeout(ready,WAIT);
   if(url)frame.src=url;else frame.removeAttribute('src');
   document.body.toggleAttribute('data-bad',!url);
 }
+document.querySelector('iframe').addEventListener('load',loaded);
 addEventListener('hashchange',show);show();

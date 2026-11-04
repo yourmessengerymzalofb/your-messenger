@@ -64,6 +64,12 @@ html[data-yzr-active] #messageViewScroll [data-yzr-message]::before{content:attr
 html[data-yzr-active] #messageViewScroll .me[data-yzr-message]::before{font-weight:normal;color:#676767}
 html[data-yzr-active] #messageViewScroll .card{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;max-width:100%!important;padding:0!important;font-family:Arial,sans-serif!important;font-size:15px;line-height:1.55;color:#000}
 html[data-yzr-active] #messageViewScroll .card small{font:9px Arial!important;color:#bbb!important;display:block;margin-top:2px}
+/* Message text can be selected, copied and its links clicked. Zalo turns the pointer off for message
+   content (.prevent-pointer-event) and lays a transparent hover area (.chat-message::before) over the
+   bubble; with the bubbles inline, that area covers the text. As observed on chat.zalo.me. */
+html[data-yzr-active] #messageViewScroll .text-message__container,html[data-yzr-active] #messageViewScroll .text-message__container *{pointer-events:auto!important;-webkit-user-select:text!important;user-select:text!important}
+html[data-yzr-active] #messageViewScroll .chat-message::before{pointer-events:none!important}
+html[data-yzr-active] #messageViewScroll .text-message__container a{cursor:pointer}
 /* Text stays inline as in the real v100 capture. Media/OA content keeps native nodes. */
 html[data-yzr-active] #messageViewScroll .chat-content,html[data-yzr-active] #messageViewScroll .chat-message,html[data-yzr-active] #messageViewScroll .message-wrapper,html[data-yzr-active] #messageViewScroll .message-content-wrapper,html[data-yzr-active] #messageViewScroll .message-content-render,html[data-yzr-active] #messageViewScroll .card{display:inline!important;float:none!important;max-width:100%!important}
 html[data-yzr-active] #messageViewScroll .chat-item>.zavatar-container,html[data-yzr-active] #messageViewScroll .message-sender,html[data-yzr-active] #messageViewScroll .chat-item__sender-name,html[data-yzr-active] #messageViewScroll .message-sender-name-wrapper,html[data-yzr-active] #messageViewScroll .chat-date,html[data-yzr-active] #messageViewScroll .date{display:none!important}

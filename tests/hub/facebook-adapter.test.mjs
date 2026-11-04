@@ -151,9 +151,26 @@ test('Facebook photos and emoji reach the Yahoo window: https photos as is, emoj
     const m=hub.read().transcript.messages.at(-1);
     assert.equal(m.text,'Chọn 🅱️ nhé');assert.equal(m.kind,'text');
     same(m.images,['https://scontent.example/photo.jpg'],'the emoji picture is not a photo');
-    // Older messages carry no pictures (each snapshot crosses tabs).
+    // Older messages keep their photo addresses (short); only pictures copied out of the page stop.
     for(let i=0;i<16;i++)log.insertAdjacentHTML('beforeend','<div role="article"><button aria-label="Enter, Message sent Today at 9:50 AM by Lan: y"></button><div aria-roledescription="message"><div dir="auto">tin '+i+'</div></div></div>');
-    assert.equal(hub.read().transcript.messages.find(x=>x.text==='Chọn 🅱️ nhé').images.length,0);
+    assert.equal(hub.read().transcript.messages.find(x=>x.text==='Chọn 🅱️ nhé').images.length,1);
+  }finally{dom.window.close();}
+});
+
+test('A shared link reads as its address, not as the preview card picture',async()=>{
+  const {dom,d,hub}=await boot();
+  try{
+    const log=d.querySelector('[role="log"]'),go=u=>'https://l.facebook.com/l.php?u='+encodeURIComponent(u)+'&amp;h=AT0';
+    // Shapes with fake addresses: a link typed in the text plus its card (Google Meet logo), and a card alone.
+    log.insertAdjacentHTML('beforeend','<div role="article"><button aria-label="Enter, Message sent Today at 9:45 AM by Lan: x"></button><div aria-roledescription="message"><div dir="auto">Họp nè <a href="'+go('https://meet.google.com/abc-defg-hij')+'">https://meet.google.com/abc-defg-hij</a></div>'
+      +'<a href="'+go('https://meet.google.com/abc-defg-hij?fbclid=XYZ')+'"><img alt="" src="https://external.example/meet-logo.png"><span dir="auto">Google Meet</span><span dir="auto">meet.google.com</span></a></div></div>'
+      +'<div role="article"><button aria-label="Enter, Message sent Today at 9:46 AM by Lan"></button><div aria-roledescription="message"><a href="'+go('https://news.example.vn/bai-viet?id=7&fbclid=XYZ')+'"><img alt="" src="https://external.example/news.jpg"><span dir="auto">Tin tức</span></a></div></div>'
+      +'<div role="article"><button aria-label="Enter, Message sent Today at 9:47 AM by Lan"></button><div aria-roledescription="message"><a href="/messenger_media/?id=1"><img alt="Open photo" src="https://scontent.example/own.jpg"></a></div></div>');
+    for(const img of log.querySelectorAll('img'))for(const[k,v]of Object.entries({complete:true,naturalWidth:600,naturalHeight:400}))Object.defineProperty(img,k,{value:v});
+    const [meet,news,photo]=hub.read().transcript.messages.slice(-3);
+    same([meet.kind,meet.text,meet.images],['text','Họp nè https://meet.google.com/abc-defg-hij',[]],'the typed address once, no Meet logo');
+    same([news.kind,news.text,news.images],['text','https://news.example.vn/bai-viet?id=7',[]],'a card alone gives its real address, without fbclid');
+    same([photo.kind,photo.images],['image',['https://scontent.example/own.jpg']],'a photo on Facebook itself stays a photo');
   }finally{dom.window.close();}
 });
 
@@ -203,5 +220,59 @@ test('Waiting in a background Facebook tab follows page changes, not chained tim
     real(()=>d.body.append(node),30);
     assert.equal(await done,true);assert.ok(Date.now()-started<1000,'resolved by the page change');
     assert.equal(timers,1,'one deadline timer, no polling');
+  }finally{dom.window.close();}
+});
+
+test('A photo not loaded yet in the background Facebook tab still reaches the window, and loading republishes',async()=>{
+  const {dom,w,d,hub}=await boot();
+  try{
+    // As in a business chat: a large picture, not inside a button, not loaded yet (lazy, background tab).
+    d.querySelector('[role="log"]').insertAdjacentHTML('beforeend','<div role="article"><button aria-label="Enter, Message sent Today at 9:12 PM by Shop Demo"></button><div aria-roledescription="message"><div><img alt="" src="https://scontent.xx.fbcdn.net/v/t1/demo.jpg"></div></div></div>'
+      +'<div role="article"><button aria-label="Enter, Message sent Today at 9:13 PM by Shop Demo"></button><div aria-roledescription="message"><div><img alt="" src="https://cdn.example/promo.jpg"></div></div></div>');
+    const [shop,promo]=[...d.querySelectorAll('[role="log"] img')].slice(-2);
+    for(const img of [shop,promo])Object.defineProperty(img,'complete',{value:false,configurable:true});
+    let published=0;w.YahooHubFacebook.bridge={publish:()=>published++};
+    let [a,b]=hub.read().transcript.messages.slice(-2);
+    same([a.kind,a.images],['image',['https://scontent.xx.fbcdn.net/v/t1/demo.jpg']],'a Facebook photo address, even before it loads');
+    same([b.kind,b.images],['image',[]],'an unknown picture waits for its size');
+    // Loaded at 600×400: it is a photo, and the bridge publishes again.
+    for(const[k,v]of Object.entries({complete:true,naturalWidth:600,naturalHeight:400}))Object.defineProperty(promo,k,{value:v,configurable:true});
+    promo.dispatchEvent(new w.Event('load'));assert.equal(published,1);
+    same(hub.read().transcript.messages.at(-1).images,['https://cdn.example/promo.jpg']);
+  }finally{dom.window.close();}
+});
+
+test('The big Like reads as 👍, not as a photo to see on Facebook',async()=>{
+  const {dom,d,hub}=await boot();
+  try{
+    // As observed: the sender's 28px picture in a button, the Like drawn as vector art (no text, no
+    // photo), and Facebook's envelope saying what was sent. Fake names.
+    d.querySelector('[role="log"]').insertAdjacentHTML('beforeend','<div role="article"><div role="group" aria-label="At 12:00 PM, Lan: 👍"><h4><span dir="auto">Lan</span></h4><div role="button"><img alt="Lan Demo" width="28" height="28" src="https://scontent.xx.fbcdn.net/v/lan.jpg"></div><div><svg viewBox="0 0 16 16"><path d="M0 0h16v16H0z"></path></svg></div><div role="button"><span dir="auto">Enter, Message sent 12:00 PM by Lan: 👍</span></div></div><button aria-label="Enter, Message sent 12:00 PM by Lan: 👍"></button></div>');
+    const m=hub.read().transcript.messages.at(-1);
+    same([m.kind,m.text,m.images],['text','👍',[]]);
+  }finally{dom.window.close();}
+});
+
+test('Facebook Pages are told apart from people: encrypted or personal-id chats are people, the open chat settles it',async()=>{
+  const {dom,w,d,hub}=await boot();
+  try{
+    // Fake ids shaped as observed: people 1000… (15 digits) or e2ee; Pages any other 15–16 digit id.
+    const row=(href,name)=>'<a href="'+href+'"><div><img src="https://scontent.example/x.jpg"><span dir="auto">'+name+'</span><span dir="auto">tin</span></div></a>';
+    d.querySelector('[role="navigation"] [role="grid"]').insertAdjacentHTML('beforeend',row('/messages/e2ee/t/7793000000000001','Bạn Mã Hóa')+row('/messages/t/100000000000001','Bạn Cũ')+row('/messages/t/711900000000001','Shop Demo')+row('/messages/t/1100000000000001','Ví Demo')+row('/messages/t/615500000000001','Người Mới'));
+    const group=name=>hub.read().entries.find(e=>e.name===name).group;
+    assert.notEqual(group('Bạn Mã Hóa'),'Page');assert.notEqual(group('Bạn Cũ'),'Page');
+    assert.equal(group('Shop Demo'),'Page');assert.equal(group('Ví Demo'),'Page');
+    assert.equal(group('Lan'),'Chưa rõ trạng thái','short test ids are not Facebook ids');
+    // A new person's account id is not 1000…: opening the chat shows call buttons, so a person.
+    assert.equal(group('Người Mới'),'Page');
+    w.history.pushState({},'','/messages/t/615500000000001');
+    const head=d.querySelector('[role="main"] a');head.insertAdjacentHTML('afterend','<div role="button" aria-label="Start a voice call" tabindex="0"></div>');
+    assert.notEqual(group('Người Mới'),'Page','the open chat has call buttons');
+    // And a Page shows "Page options" instead.
+    d.querySelector('[aria-label="Start a voice call"]').remove();
+    w.history.pushState({},'','/messages/t/100000000000001');head.insertAdjacentHTML('afterend','<div role="button" aria-label="Page options" tabindex="0"></div>');
+    assert.equal(group('Bạn Cũ'),'Page','a Page with a personal-style id, once its chat is seen');
+    w.history.pushState({},'','/messages/t/111');
+    assert.notEqual(group('Người Mới'),'Page','what was seen is kept');
   }finally{dom.window.close();}
 });

@@ -11,9 +11,11 @@ import {createChannelWindow} from './channel-window.mjs';
 import {hostFacebook} from './facebook-channel.mjs';
 import {combineBuddyLists,YAHOO_ICON} from './buddy-tabs.mjs';
 import {startQuickId} from './quick-id.mjs';
-import {acceptTerms} from './terms.mjs';
+import {acceptTerms,zaloSignedIn} from './terms.mjs';
+const SIGNED_IN_WAIT=20000;
 import {createY360Window} from './y360-window.mjs';
 import {watchMessages} from './alerts.mjs';
+import {watchChatLinks} from './chat-links.mjs';
 import {startNicknameChange} from './nickname.mjs';
 import baseCss from 'ym-css:globals';
 import {shell} from '../../vendor/yahoo-v2/app/shell.ts';
@@ -27,11 +29,18 @@ export async function boot(){
   injectCss(ROOT_CSS,'root');injectCss(baseCss,'globals');
   YM_ROOT.className='login-screen';
   YM_ROOT.innerHTML=shell;
+  // Signed out, Zalo shows its loading screen and then moves the tab to its QR sign-in page
+  // (id.zalo.me, where the plugin does not run). The desktop waits for Zalo's signed-in screen so it
+  // does not flash up only to vanish; after the QR scan Zalo comes back here signed in. Should Zalo's
+  // page change and that screen go unrecognised, the desktop still comes up after a while.
+  await Promise.race([zaloSignedIn(document),new Promise(r=>{const t=setTimeout(r,SIGNED_IN_WAIT);t?.unref?.();})]);
   const page=document.querySelector('body');
   page.append(YM_ROOT);
   // First run: the terms, before anything reads Zalo or Facebook. Declined: Zalo stays as it is.
   if(!await acceptTerms(YM_ROOT)){YM_ROOT.remove();return;}
   watchMedia(YM_ROOT);
+  // Web addresses in Y! and Facebook chat messages open in a new tab.
+  watchChatLinks(YM_ROOT);
   zaloSwitch(page,yahoo=>globalThis.YahooZaloSkin?.pause(!yahoo));
   const {startLogin}=await import('../../vendor/yahoo-v2/client/login-bootstrap.mjs');
   startLogin();

@@ -27,6 +27,15 @@ test('After sign-in Y! 360° opens beside YM!, last: after the buddy list has dr
     assert.ok(win.querySelector('.ym-y360-panel iframe.ym-y360-frame'));
     assert.deepEqual([...win.querySelectorAll('.ym-y360-link')].map(n=>n.textContent),['Trang chủ Y!360','Làm mới','Mở trong tab mới']);
     assert.equal(win.querySelector('.ym-y360-external').getAttribute('href'),'https://chat.ymvn.site/360');
+    // Home and Làm mới load the wrapper page again: a new address each time, or Chrome does nothing.
+    const [home,reload]=win.querySelectorAll('button.ym-y360-link'),shown=()=>frame.dataset.ymFrame;
+    const first=shown();reload.click();await tick();const second=shown();home.click();await tick(20);
+    assert.ok(first&&second&&shown()&&new Set([first,second,shown()]).size===3,'every load is a new address');
+    assert.match(shown(),/y360\.html\?n=\d+#https%3A%2F%2Fchat\.ymvn\.site%2F%3Freturn360%3D%252F360$/,'signed in: Messenger opens the blog');
+    // Mở trong tab mới: a tab of its own, not this window again.
+    const opened=[],open=globalThis.open;globalThis.open=(...a)=>{opened.push(a);return null;};
+    try{win.querySelector('.ym-y360-external').click();}finally{globalThis.open=open;}
+    assert.deepEqual(opened,[['https://chat.ymvn.site/360','_blank','noopener']]);assert.equal(shown().length>0,true);
     // Closed by the user: it stays closed (no second automatic open while signed in).
     win.querySelector('[aria-label="Đóng Y! 360°"]').click();await tick(2500);
     assert.ok(win.hidden,'stays closed');

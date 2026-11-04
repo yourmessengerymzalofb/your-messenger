@@ -13,3 +13,9 @@ test('A folded app stays folded only in Tất cả; Zalo/Facebook loading shows 
   assert.match(ROOT_CSS,/prefers-reduced-motion:reduce\)\{#ym-root \.ym-channel-loading::before/);
   dom.window.close();
 });
+
+test('Chat text can be selected and copied, even when the page underneath turns selection off',async()=>{
+  const {ROOT_CSS}=await import('../../src/yahoo/style.mjs');
+  assert.match(ROOT_CSS,/#ym-root \.messages \.message-line \*\{-webkit-user-select:text;user-select:text\}/);
+  assert.match(ROOT_CSS,/a\.ym-chat-link\{[^}]*text-decoration:underline/);
+});

@@ -4,7 +4,7 @@
 (() => {
   const hubOrigins=['https://chat.zalo.me'];
   const sources=[
-    {id:'facebook',label:'Facebook',openUrl:'https://www.facebook.com/messages/',groups:['Online','Offline','Group','Chưa rõ trạng thái'],
+    {id:'facebook',label:'Facebook',openUrl:'https://www.facebook.com/messages/',groups:['Online','Offline','Group','Chưa rõ trạng thái','Page'],
      match:u=>/^https:\/\/(?:www\.|web\.)?facebook\.com$/.test(u.origin)&&u.pathname.startsWith('/messages')}
   ];
   const parse=url=>{try{return new URL(url);}catch{return null;}};

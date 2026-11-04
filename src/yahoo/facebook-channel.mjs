@@ -5,13 +5,18 @@
 import {YM_ASSET} from './env.mjs';
 import {whenDesktop} from './desktop-bridge.mjs';
 import {createChannelWindow} from './channel-window.mjs';
+import {appendLinked} from './chat-links.mjs';
 import EMOTICONS from '../../vendor/yahoo-v2/client/emoticons.mjs';
 
 const LABEL='Facebook';
 // Status hub-adapter.js gives the open conversation when Facebook shows "Active now".
 const ACTIVE='Đang hoạt động';
+// A Messages tab open since before the plugin was installed, updated or reloaded runs without it
+// until reloaded: the plugin has no access to find or reach that tab itself (no facebook.com host
+// permission, so no way near Facebook's cookies either).
+const OLD_TAB='Đã mở tab Messages từ trước khi cài hay cập nhật plugin? Bấm F5 trên tab đó.';
 const REASONS={
-  'no-source':'Chưa mở tab Facebook Messages. Bấm dòng trạng thái trong danh sách Facebook để mở.',
+  'no-source':'Chưa mở tab Facebook Messages. Bấm dòng trạng thái trong danh sách Facebook để mở. '+OLD_TAB,
   'no-hub':'Mất kết nối với plugin. Đang thử lại…',
   'reloaded':'Plugin vừa được cập nhật. Tải lại trang (F5) để dùng tiếp.',
   'not-ready':'Facebook chưa sẵn sàng (chưa đăng nhập?).',
@@ -29,7 +34,7 @@ const REASONS={
   'no-call':'Facebook không có nút gọi cho hội thoại này.',
   'no-info':'Không thấy nút Thông tin hội thoại trên tab Facebook.'
 };
-const STATUS={closed:'Chưa mở Facebook Messages — bấm để mở (tab chạy nền)',login:'Facebook chưa đăng nhập — bấm để xem tab',unrecognized:'Tab Facebook không ở trang Messages — bấm để xem tab',connecting:'Đang kết nối Facebook…'};
+const STATUS={closed:'Chưa mở Facebook Messages — bấm để mở (tab chạy nền). '+OLD_TAB,login:'Facebook chưa đăng nhập — bấm để xem tab',unrecognized:'Tab Facebook không ở trang Messages — bấm để xem tab',connecting:'Đang kết nối Facebook…'};
 const PLACEHOLDER={image:'[Ảnh]',sticker:'[Sticker]',file:'[Tệp]',call:'[Cuộc gọi]',link:'[Liên kết]',other:'[Nội dung khác]'};
 // Yahoo chat controls that have no Facebook counterpart stay visible but disabled. Text formatting
 // too: Facebook messages carry plain text only.
@@ -84,9 +89,13 @@ export function hostFacebook(root){
     b.setAttribute('aria-label','Chat với '+e.name+' trên Facebook');b.dataset.ymKey=e.key;
     const pic=el('span','tiny-avatar');pic.append(picture(e.avatar));
     const text=el('span','contact-text'),first=el('span','contact-first');
-    first.append(el('span','presence-dot'+(e.group==='Online'?'':' offline')),el('b','',e.name));
+    // A Page (shop, brand, bot) has no online status; Chưa đọc lists it apart (buddy-tabs.mjs).
+    const page=e.group==='Page';if(page)b.dataset.ymBusiness='Page';
+    if(!page)first.append(el('span','presence-dot'+(e.group==='Online'?'':' offline')));
+    first.append(el('b','',e.name));
     if(e.group==='Group')first.append(el('span','virtual-badge group-badge','Nhóm'));
-    text.append(first,el('small','',e.time||(e.group==='Online'?'Đang hoạt động':'Facebook')));
+    if(page)first.append(el('span','virtual-badge group-badge','Page'));
+    text.append(first,el('small','',e.time||(e.group==='Online'?'Đang hoạt động':page?'Trang Facebook':'Facebook')));
     b.append(pic,text);
     if(e.unread)b.append(el('span','contact-unread','●'));
     // ymActivate: the combined list's "Chưa đọc" copy hands over the user's own click.
@@ -104,7 +113,7 @@ export function hostFacebook(root){
     // Snapshots arrive on every change of the Facebook page; rebuild only when the list changed.
     // The open conversation's header says "Active now" more reliably than the list's dot guess:
     // that person is Online here too, so the list and the chat window agree.
-    const live=source.transcript,entries=source.entries.map(e=>e.group!=='Group'&&live?.key===e.key&&live.status===ACTIVE?{...e,group:'Online'}:e);
+    const live=source.transcript,entries=source.entries.map(e=>e.group!=='Group'&&e.group!=='Page'&&live?.key===e.key&&live.status===ACTIVE?{...e,group:'Online'}:e);
     const signature=JSON.stringify([source.connected,source.state,ready?entries:[]]);
     if(signature===painted)return;
     painted=signature;
@@ -194,7 +203,7 @@ export function hostFacebook(root){
     const n=el('div','message-line'),mine=m.from==='me';
     n.append(el('span','sender'+(mine?' me':''),(mine?'Bạn':m.sender||w.name)+':'));
     const pics=m.images||[];
-    if(m.kind==='text')n.append(el('span','message-body',m.text));
+    if(m.kind==='text')n.append(appendLinked(el('span','message-body'),m.text));
     else if(m.kind==='call')n.append(el('span','message-body ym-placeholder','📞 '+(m.text||'Cuộc gọi')));
     else if(!pics.length)n.append(el('span','message-body ym-placeholder',PLACEHOLDER[m.kind]+(m.text?' '+m.text:'')+' — xem trên Facebook'));
     // Photos as the Facebook tab shows them (small copies for end-to-end encrypted chats).

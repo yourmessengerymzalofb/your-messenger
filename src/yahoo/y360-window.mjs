@@ -25,6 +25,8 @@ export function createY360Window(root,{frame=globalThis.chrome?.runtime?.getURL?
   const link=(text,titleText)=>{const b=el('button','ym-y360-link',text);b.type='button';b.title=titleText;return b;};
   const home=link('Trang chủ Y!360','Về trang chủ Y! 360°'),reload=link('Làm mới','Tải lại trang Y! 360° đang xem');
   const external=el('a','ym-y360-link ym-y360-external','Mở trong tab mới');external.target='_blank';external.rel='noopener';external.title='Mở Y! 360° trong tab mới';
+  // env.mjs opens Y! 360° links in this window; this one is meant for a tab.
+  external.dataset.ymNewTab='';
   links.append(badge,home,el('span','ym-y360-dot','·'),reload,el('span','ym-y360-dot','·'),external);
   body.append(panel,links);node.append(title,body);
   const task=el('button','xp-task ym-y360-task');task.type='button';task.title='Y! 360°';
@@ -39,7 +41,10 @@ export function createY360Window(root,{frame=globalThis.chrome?.runtime?.getURL?
   // the session to what the Yahoo site in the frame asks for itself (yahoo-proxy.js). So a signed-in
   // desktop opens Messenger's /?return360=…: it checks the session and then opens the blog page itself.
   const target=url=>{if(!signedIn())return url;const u=new URL(url);return u.origin+'/?return360='+encodeURIComponent(u.pathname+u.search);};
-  const load=()=>{view.dataset.ymUrl=last;go(frame+'#'+encodeURIComponent(target(last)));};
+  // Each load asks for a new copy of the wrapper page (?n=…): the same address again, hash and all,
+  // is no navigation at all, and Home or Làm mới would do nothing once the reader moved inside the blog.
+  let loads=0;
+  const load=()=>{view.dataset.ymUrl=last;view.dataset.ymFrame=frame+'?n='+(++loads)+'#'+encodeURIComponent(target(last));go(view.dataset.ymFrame);};
   const unload=()=>{delete view.dataset.ymUrl;go('about:blank');};
   function register(){
     // Closing unloads the blog; the taskbar button brings back the last address.

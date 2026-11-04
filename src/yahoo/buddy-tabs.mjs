@@ -26,15 +26,21 @@ export function combineBuddyLists(root,lists,{store=globalThis.chrome?.storage?.
   tab('all','Tất cả');
   contacts.before(bar);contacts.before(box);
   // "Chưa đọc" (Tất cả only): copies of the unread rows of every app; a click goes to the real row.
-  // Its heading folds it away like an app's (remembered as "unread").
-  const unreadSection=el('section','ym-source ym-unread-source'),unreadHead=el('button','ym-source-head ym-unread-head'),unreadLabel=el('span'),unreadList=el('div','contacts ym-unread-list');
-  unreadHead.type='button';unreadHead.title='Thu gọn hoặc mở Chưa đọc';unreadHead.setAttribute('aria-expanded','true');unreadHead.append(el('span','ym-fold','▾'),unreadLabel);
-  unreadSection.hidden=true;unreadSection.append(unreadHead,unreadList);box.append(unreadSection);
+  // Zalo official accounts and Facebook Pages (rows marked data-ym-business by their adapters) go to
+  // a second list after it, so people come first. Each heading folds its list away like an app's
+  // (remembered as "unread" and "unreadBusiness").
+  const unreadLists=new Map();
+  for(const[id,title]of[['unread','Chưa đọc'],['unreadBusiness','OA / Page chưa đọc']]){
+    const section=el('section','ym-source ym-unread-source'+(id==='unread'?'':' ym-unread-business')),head=el('button','ym-source-head ym-unread-head'),label=el('span'),list=el('div','contacts ym-unread-list');
+    head.type='button';head.title='Thu gọn hoặc mở '+title;head.setAttribute('aria-expanded','true');head.append(el('span','ym-fold','▾'),label);
+    section.hidden=true;section.dataset.unread=id;section.append(head,list);box.append(section);
+    head.addEventListener('click',()=>toggle(id));
+    unreadLists.set(id,{section,head,label,list,title});
+  }
   // In Tất cả a heading folds its app away (remembered); the tabs show one app.
   let folded={};
-  const fold=(id,on)=>{const s=id==='unread'?{section:unreadSection,head:unreadHead}:sections.get(id);if(!s)return;s.section.toggleAttribute('data-folded',on);s.head.setAttribute('aria-expanded',String(!on));};
+  const fold=(id,on)=>{const s=unreadLists.get(id)||sections.get(id);if(!s)return;s.section.toggleAttribute('data-folded',on);s.head.setAttribute('aria-expanded',String(!on));};
   const toggle=id=>{folded={...folded,[id]:!folded[id]};fold(id,folded[id]);try{store?.set?.({[FOLD_KEY]:folded});}catch{}};
-  unreadHead.addEventListener('click',()=>toggle('unread'));
   for(const s of sources){
     tab(s.id,s.label,s.icon);
     const section=el('section','ym-source ym-src-'+s.id+(s.id==='yahoo'?'':' ym-channel-source')),head=el('button','ym-source-head');head.type='button';
@@ -87,13 +93,15 @@ export function combineBuddyLists(root,lists,{store=globalThis.chrome?.storage?.
   }
   function paintUnread(){
     const rows=current!=='all'?[]:sources.flatMap(s=>[...s.list.querySelectorAll('.contact-row')].filter(r=>!r.hidden&&r.querySelector('.contact-unread')&&unread(r.querySelector('.contact-unread'))).map(r=>({s,r})));
-    unreadSection.hidden=!rows.length;if(!rows.length){unreadList.replaceChildren();return;}
-    unreadLabel.textContent='Chưa đọc ('+rows.length+')';
-    unreadList.replaceChildren(...rows.map(({s,r})=>{
-      const copy=r.cloneNode(true),name=label(r);copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
-      copy.classList.add('ym-unread-row');copy.dataset.app=s.id;copy.title=s.label+': '+name;
-      copy.addEventListener('click',e=>forward(s,name,e));return copy;
-    }));
+    for(const[id,u]of unreadLists){
+      const mine=rows.filter(({r})=>(id==='unreadBusiness')===!!r.dataset.ymBusiness);
+      u.section.hidden=!mine.length;u.label.textContent=u.title+' ('+mine.length+')';
+      u.list.replaceChildren(...mine.map(({s,r})=>{
+        const copy=r.cloneNode(true),name=label(r);copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+        copy.classList.add('ym-unread-row');copy.dataset.app=s.id;copy.title=s.label+(r.dataset.ymBusiness?' '+r.dataset.ymBusiness:'')+': '+name;
+        copy.addEventListener('click',e=>forward(s,name,e));return copy;
+      }));
+    }
   }
   const show=(badge,n)=>{badge.hidden=!n;badge.textContent=n>99?'99+':String(n||'');};
   // Yahoo's search box filters the Zalo and Facebook lists too.
