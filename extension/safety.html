@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your Messenger — An toàn &amp; bản quyền</title>
+<style>
+body{max-width:760px;margin:0 auto;padding:24px 16px 48px;background:#f4f3eb;color:#2b2140;font:15px/1.6 Tahoma,Arial,sans-serif}
+header{display:flex;align-items:center;gap:10px;margin:-24px -16px 20px;padding:12px 16px;color:#fff;background:linear-gradient(#b5a2da,#6134ad 48%,#8b55cb 72%,#b790ed)}
+header img{width:32px;height:32px;border-radius:6px}
+h1{font-size:20px;margin:0}
+h2{font-size:16px;color:#5b338e;margin:28px 0 8px;border-bottom:1px solid #ddd6c6;padding-bottom:4px}
+code{background:#fff;border:1px solid #ddd6c6;border-radius:3px;padding:0 4px;font-size:13px}
+table{border-collapse:collapse;width:100%;background:#fff}
+th,td{border:1px solid #ddd6c6;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#efede3}
+.yes{color:#1a7f37}.no{color:#b00020}
+.box{background:#fff8d8;border:1px solid #e4d79a;border-radius:4px;padding:8px 12px}
+</style>
+</head>
+<body>
+<header><img src="icons/icon-48.png" alt=""><h1>Your Messenger — An toàn &amp; bản quyền</h1></header>
+
+<p>Your Messenger là plugin Chrome hoài niệm: hiển thị Zalo Web và Facebook Messages trong giao diện phong cách YM!, gom chung một danh sách bạn, và nối với máy chủ YM v2 để BUZZ, chơi game, chat với bạn Y!.</p>
+<p class="box"><b>Sản phẩm hoài niệm, lưu hành nội bộ nhóm Codex VN, không có mục đích thương mại.</b> Không liên kết với Yahoo, Zalo (VNG) hay Meta. Tên, logo, âm thanh và emoticon Yahoo thuộc về chủ sở hữu tương ứng.</p>
+
+<h2>Điều khoản sử dụng</h2>
+<p>Lần đầu mở Zalo Web với plugin, bạn được hỏi đồng ý các điều sau. Không đồng ý thì desktop tắt và Zalo giữ nguyên giao diện gốc.</p>
+<ol>
+<li><b>Sản phẩm hoài niệm, phi thương mại.</b> Your Messenger là dự án làm vì hoài niệm YM! cổ điển: miễn phí, không quảng cáo, không thu tiền, không có mục đích thương mại.</li>
+<li><b>Lưu hành nội bộ nhóm Codex VN.</b> Bản thử nghiệm chỉ dành cho thành viên nhóm Codex VN. Vui lòng không chia sẻ tệp cài đặt ra ngoài nhóm, và chỉ cài từ kênh chính thức của nhóm.</li>
+<li><b>Không liên kết với Yahoo, Zalo (VNG) hay Meta.</b> Tên, logo, âm thanh và hình ảnh Yahoo thuộc về chủ sở hữu. Phần nào bị chủ sở hữu yêu cầu sẽ được gỡ ngay.</li>
+<li><b>Dữ liệu của bạn ở lại trong máy.</b> Plugin chỉ đọc nội dung đang hiện trên Zalo Web và Facebook để vẽ lại giao diện, ngay trong trình duyệt; không gửi nội dung Zalo hay Facebook đi đâu, không hỏi và không đọc mật khẩu Zalo hay Facebook. Mạng chỉ dùng để nối với máy chủ YM v2 cho các tính năng Y!.</li>
+<li><b>Không tự thao tác.</b> Mọi thao tác trên Zalo và Facebook chỉ chạy khi chính bạn bấm. Plugin không tự gửi tin, không tự kết bạn.</li>
+<li><b>Bản thử nghiệm, bạn tự chịu trách nhiệm khi dùng.</b> Plugin có thể có lỗi hoặc tạm ngừng chạy khi Zalo, Facebook đổi giao diện. Bạn vẫn phải tuân thủ điều khoản của Zalo và Facebook. Khi cần, bấm nút Zalo ở khay để về giao diện gốc, hoặc gỡ plugin.</li>
+</ol>
+
+<h2>Plugin làm gì và không làm gì</h2>
+<table>
+<tr><th>Việc</th><th>Có hay không</th></tr>
+<tr><td>Đọc danh sách hội thoại và tin nhắn <b>đang hiện trên trang</b> Zalo Web, Facebook Messages để vẽ lại theo giao diện Y!</td><td class="yes">Có — đây là việc chính của plugin, và chỉ xảy ra ngay trong trình duyệt của bạn.</td></tr>
+<tr><td>Gửi nội dung Zalo hay Facebook (tin nhắn, danh bạ, ảnh) đi bất cứ đâu</td><td class="no">Không. Plugin không gọi API nào của Zalo hay Facebook và không gửi dữ liệu của hai app này ra ngoài.</td></tr>
+<tr><td>Hỏi, đọc hay lưu mật khẩu Zalo, Facebook</td><td class="no">Không. Bạn đăng nhập trên trang của Zalo và Facebook như bình thường. Plugin không chạy trên trang đăng nhập của Zalo; ở Facebook, nếu gặp form đăng nhập, plugin chỉ ghi nhận "chưa đăng nhập" và không đọc ô mật khẩu.</td></tr>
+<tr><td>Tự gửi tin, tự bấm, tự kết bạn</td><td class="no">Không. Mọi thao tác trên Zalo, Facebook chỉ chạy khi chính bạn bấm.</td></tr>
+<tr><td>Kết nối mạng</td><td class="yes">Chỉ tới máy chủ YM v2 (để đăng nhập Y!, BUZZ, game, bạn Y!), qua một cổng kiểm soát trong plugin. Cửa sổ Y! 360° là khung nhúng trang <code>/360</code> của cùng máy chủ đó.</td></tr>
+<tr><td>Lưu trên máy</td><td class="yes">Các lựa chọn của bạn, và mật khẩu Y! ID nếu bạn tạo bằng nút "Tạo Y! ID" (lưu trong bộ nhớ của plugin, trang Zalo không đọc được).</td></tr>
+</table>
+
+<h2>Quyền plugin xin Chrome</h2>
+<table>
+<tr><th>Quyền</th><th>Để làm gì</th></tr>
+<tr><td><code>chat.zalo.me</code></td><td>Chạy desktop Y! và đọc danh sách hội thoại Zalo đang hiện.</td></tr>
+<tr><td><code>facebook.com/messages</code></td><td>Đọc danh sách và tin nhắn Facebook đang hiện, chỉ ở trang Messages.</td></tr>
+<tr><td><code>storage</code></td><td>Lưu lựa chọn của bạn trong máy.</td></tr>
+<tr><td><code>chat.ymvn.site</code></td><td>Máy chủ YM v2.</td></tr>
+<tr><td><code>declarativeNetRequestWithHostAccess</code></td><td>Gắn đúng địa chỉ gốc Y! cho các yêu cầu <i>do plugin gửi</i> tới máy chủ YM v2. Trong tab Zalo, gắn phiên đăng nhập Y! cho khung Y! 360° — chỉ khung do trang của plugin hoặc chính trang Y! mở ra; khung mà trang Zalo tự tạo không được gắn.</td></tr>
+<tr><td><code>cookies</code></td><td>Đọc cookie đăng nhập của <code>chat.ymvn.site</code> để khung Y! 360° hiện đúng tài khoản Y! của bạn. Chrome chỉ cho đọc cookie của địa chỉ trong bảng này (máy chủ YM v2); plugin không đọc được cookie của Zalo hay Facebook.</td></tr>
+</table>
+<p>Plugin <b>không</b> xin: quyền đọc mọi trang web, cookie của Zalo hay Facebook, lịch sử, tải tệp, đọc các tab khác. Plugin không chạy trên trang đăng nhập của Zalo (<code>id.zalo.me</code>).</p>
+<p>Cổng mạng trong plugin chỉ cho đi tới địa chỉ YM v2 ở trên, chỉ các đường dẫn <code>/api/…</code> và <code>/game-modules.json</code>, chỉ từ trang Zalo hoặc trang của plugin; mọi địa chỉ khác bị từ chối.</p>
+
+<h2>Tự kiểm tra</h2>
+<ol>
+<li>Mở <code>chrome://extensions</code>, bấm <b>Chi tiết</b> ở Your Messenger: xem đúng các quyền ở trên.</li>
+<li>Trên tab Zalo, bấm <code>F12</code> → thẻ <b>Network</b>: các yêu cầu của plugin chỉ đi tới máy chủ YM v2.</li>
+<li>Muốn chắc chắn hơn: đăng nhập Zalo Web và Facebook <b>trước</b>, rồi mới bật plugin. Khi cần đăng nhập lại, tắt plugin ở <code>chrome://extensions</code>, đăng nhập, rồi bật lại.</li>
+<li>Mã nguồn của plugin công khai trên GitHub: <a href="https://github.com/yourmessengerymzalofb/your-messenger" target="_blank">github.com/yourmessengerymzalofb/your-messenger</a> (giấy phép PolyForm Noncommercial, chỉ dùng phi thương mại). Phần client YM v2 không nằm trong repo, chỉ có ở dạng đã build trong gói cài. Mỗi bản phát hành kèm mã SHA-256 để đối chiếu đúng tệp.</li>
+</ol>
+
+<h2>Những điểm cần biết</h2>
+<ul>
+<li>Plugin chạy bên trong trang Zalo và Facebook nên <b>về kỹ thuật có thể đọc</b> nội dung đang hiện — đó là cách nó vẽ lại giao diện. Hãy chỉ cài bản lấy từ kênh chính thức.</li>
+<li>Bản cài thủ công (chế độ nhà phát triển) <b>không tự cập nhật</b>; mỗi bản mới cần cài lại.</li>
+<li>Zalo và Facebook đổi giao diện thì plugin có thể tạm hỏng; khi đó bấm nút <b>Zalo</b> ở khay để về giao diện gốc.</li>
+<li>Bản ở nơi khác (đăng lại, sửa lại) không phải của dự án.</li>
+</ul>
+
+<h2>Bản quyền</h2>
+<p>Giao diện mô phỏng YM! cổ điển nhằm mục đích hoài niệm, phi thương mại. Nếu chủ sở hữu nào yêu cầu, phần liên quan sẽ được gỡ hoặc thay ngay; phần gom Zalo và Facebook vẫn hoạt động với giao diện khác.</p>
+</body>
+</html>

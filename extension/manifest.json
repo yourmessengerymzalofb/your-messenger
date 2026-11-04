@@ -1,0 +1,106 @@
+{
+  "manifest_version": 3,
+  "name": "Your Messenger – Giao diện cổ điển cho Zalo Web & Facebook",
+  "version": "0.3.0",
+  "version_name": "0.3.0 beta 1",
+  "description": "Phong cách YM! cho Zalo Web và Facebook. Dự án hoài niệm phi thương mại, không liên kết với Yahoo, Zalo hay Meta.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "declarativeNetRequestWithHostAccess",
+    "cookies"
+  ],
+  "background": {
+    "service_worker": "background/sw.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Your Messenger",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.zalo.me/*"
+      ],
+      "js": [
+        "adapters/zalo/layout.js",
+        "adapters/zalo/actions.js",
+        "adapters/zalo/windows.js",
+        "adapters/zalo/transcript.js",
+        "adapters/zalo/buddies.js",
+        "adapters/zalo/chrome.js",
+        "adapters/zalo/content.js",
+        "shared/protocol.js",
+        "shared/registry.js"
+      ],
+      "css": [
+        "adapters/zalo/vendor/v2.css",
+        "adapters/zalo/skin.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://chat.zalo.me/*"
+      ],
+      "js": [
+        "yahoo/loader.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.facebook.com/messages*",
+        "https://web.facebook.com/messages*"
+      ],
+      "js": [
+        "adapters/facebook/actions.js",
+        "adapters/facebook/transcript.js",
+        "adapters/facebook/buddies.js",
+        "shared/protocol.js",
+        "shared/compose.js",
+        "shared/bridge.js",
+        "adapters/facebook/hub-adapter.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "adapters/zalo/assets/*",
+        "adapters/zalo/assets/xp/*",
+        "adapters/zalo/icons/*"
+      ],
+      "matches": [
+        "https://chat.zalo.me/*"
+      ]
+    },
+    {
+      "resources": [
+        "yahoo/*"
+      ],
+      "matches": [
+        "https://chat.zalo.me/*"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  },
+  "host_permissions": [
+    "https://chat.ymvn.site/*"
+  ]
+}

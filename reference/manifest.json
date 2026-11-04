@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Yahoo Retro for Zalo — Local Preview",
+  "version": "0.2.7",
+  "description": "Skin Yahoo cổ điển cho Zalo Web; giữ nguyên đăng nhập và chức năng chat của Zalo.",
+  "permissions": [
+    "storage"
+  ],
+  "action": {
+    "default_title": "Yahoo cho Zalo",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.zalo.me/*"
+      ],
+      "js": [
+        "layout.js",
+        "actions.js",
+        "windows.js",
+        "transcript.js",
+        "buddies.js",
+        "chrome.js",
+        "content.js"
+      ],
+      "css": [
+        "vendor/v2.css",
+        "skin.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*",
+        "assets/xp/*",
+        "icons/*"
+      ],
+      "matches": [
+        "https://chat.zalo.me/*"
+      ]
+    }
+  ]
+}

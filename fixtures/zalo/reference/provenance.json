@@ -1,0 +1,44 @@
+{
+  "commit": "21fce76353a607e7e1ce54e8d71d52a6caaa6981",
+  "css": {
+    "ym.css": "bb0c938943b023e96a01b19fa600b374ff3de7d7ed34dc0a4d537052b230d18a",
+    "xp.css": "ea69df79847b32fdcf9c5114509e0481e77674d3bdf3eb0cd917982629845e0d",
+    "desktop-reference.css": "c82ba534df226e6912454deb6b77a2a0fbc538a75c7188022710f11ab1485907",
+    "taskbar.css": "9233db58635ac77da6cde28d5a61460618934f12613740d32c3c8b2007575513",
+    "conversations.css": "bd087813ceeba949529dd4db1570c16d577722a2abd7cd96c71cf82f61b29cf1",
+    "window-features.css": "ad0f5d8706f4c45ec0d3cf2fc9728d916f279e8e47b6901b6ba0fbcd580dded2",
+    "window-resize.css": "54bad6aa829437881e2729959a18a6ebc9f8a0400ce4d7bf2d30f13d1a2341e6",
+    "composer-style.css": "5dab477caba47599c14a96ad7c599132c35847ad0291bbf6a1104e736123d551",
+    "contact-loading.css": "9e42c7a430d88679f4e34f0534fcc30dd97962f520940c984c3a89b222f56d54",
+    "imvironments.css": "a605772ddf2816a56902aee189efafe1d6cff6cca8eb43e0cb7b65c4bbb4a2e2"
+  },
+  "assets": {
+    "assets/xp/bliss.jpg": "8ad5974447d731f713b178c6685cd3a878d0178381b9e43b684f2b1bec707a96",
+    "assets/xp/start.png": "43b9dadd77bffce7621091865a2c9d5546d190237b95ac24de5c84f4a639afc2",
+    "assets/xp/yahoo-icon.png": "718add4518974dd040abd6757751c154bd23263a2087b58d11158087f837b4c7",
+    "assets/happy.gif": "e80814ecc035b9c8d9bb98c6acdcd2b9452d99d57f57c885b7ed722cbfbe5b07",
+    "assets/imv-hearts.svg": "f37c65cb6a195c864e321e12eaa7e2155d8761e414c29b396efde4811e26ecf6",
+    "assets/buzz.wav": "a0abfeea17c8cacbb156b35d398ab803d2b62fa560f8af4b9e2adb6419681802",
+    "assets/door.wav": "31031d78c47904209598ec6f4a77682cdc69f48f368b44adfd8009e2747c0dc7",
+    "assets/type.wav": "5f7ad0c714832b85656c1d77c3e461f1177ddf6c1475075fdb12d1c629f4a3d2",
+    "icons/webcam.svg": "8b60336df9c0b1e2cf224ccf798410366b07538a9287f16732310f337cd4c5cb",
+    "icons/mic.svg": "95ff166507cd5d15379f8856087130c402ecd7227e184750c9e70463673dfda0",
+    "icons/leaves.svg": "f2475f6c6c17f67ed4ed8e770c4f191adf105e2b67a6edf44e9043257e73faf6",
+    "icons/chess.svg": "f46a20ee6b415b52cbe4a92bc9f88ba8fa4f2be7542266a67f0f08287c35d44c",
+    "icons/photos.svg": "fd11866c2a40122010d2ac71d181f9003b3b38b67ed2a47af585e118d47aff5e",
+    "icons/contact-pane.svg": "58b8f591c1340b57d260b8057dedffdeb090c4b822a62af1d7f9c713e81968fd",
+    "icons/palette.svg": "582d09dc71eb04dea8817040390a3d098e2e4ad12cba68f43fc55d6f0c75a065",
+    "icons/paperclip.svg": "2cc9eb77c64340334ca3b896be328def7f7652e43d9d28c5938e8a7e56bc34af",
+    "icons/audible.svg": "3abe8afcbbb42929e7b748aa3d54b78e3a1dae0c345b9f565cda2c172ea630b8",
+    "icons/group.svg": "1208854e3142889453b7efee9ca02ceda0527ed6a302612d9db6953a169af9a4",
+    "icons/blog360.svg": "a8569ea1d564d4e7f663e976ef9a082fd31801b0b0282ffa347a6aa1d4048c2d",
+    "icons/app.svg": "5cb5d40e6c4b61f1a3b941414cfe3f3f649515893759c0591f2b287e71282831"
+  },
+  "facebook": {
+    "windows.js": "3bd4c20a29304edb9bc5e49cc3107517ee41fde7a826df415826a64f15b40df6",
+    "layout.js": "dd4764238f8b8755b8e0ea97b0e92a148abd11a50acde25d92db8870c9d0ca45",
+    "buddies.js": "46f276e4e3422399d554df7101fd54daff270e4e931724cf5aa122b75a0cdea9",
+    "actions.js": "6f8c5338f507645b07a83d2a1358f368dfd561a57f334a4b9e3d6127456c2643",
+    "chrome.js": "f6999dba9099d604f2dd9b0126a6b391df36aa7d91def330bd2d375ace1e4bed"
+  }
+}

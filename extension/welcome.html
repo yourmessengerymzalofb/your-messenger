@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chào mừng đến Your Messenger</title>
+<style>
+body{max-width:720px;margin:0 auto;padding:24px 16px 48px;background:#f4f3eb;color:#2b2140;font:15px/1.6 Tahoma,Arial,sans-serif}
+header{display:flex;align-items:center;gap:10px;margin:-24px -16px 20px;padding:12px 16px;color:#fff;background:linear-gradient(#b5a2da,#6134ad 48%,#8b55cb 72%,#b790ed)}
+header img{width:32px;height:32px;border-radius:6px}
+h1{font-size:20px;margin:0}
+.card{background:#fff;border:1px solid #ddd6c6;border-radius:4px;padding:12px 18px}
+ol{padding-left:22px}li{margin:8px 0}li b{color:#5b338e}
+.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:16px}
+button{padding:7px 16px;border:1px solid #7e6da1;border-radius:3px;background:linear-gradient(#fff,#e9e8df);font:bold 14px Tahoma,Arial,sans-serif;color:#2b2140;cursor:pointer}
+button.primary{background:linear-gradient(#a98ad3,#6134ad);color:#fff;border-color:#4b2a78}
+.done{display:none;margin-top:16px;padding:10px 14px;border-radius:4px}
+body[data-state=accepted] .done.ok,body[data-state=declined] .done.no{display:block}
+body[data-state] .actions{display:none}
+.ok{background:#e9f7ec;border:1px solid #9fd3a9}.no{background:#fff8d8;border:1px solid #e4d79a}
+a{color:#5b338e}
+</style>
+</head>
+<body>
+<header><img src="icons/icon-48.png" alt=""><h1 id="title">Your Messenger — Điều khoản sử dụng</h1></header>
+<div class="card">
+<p id="intro"></p>
+<ol id="points"></ol>
+<p><a href="safety.html" target="_blank">Xem chi tiết: An toàn &amp; bản quyền</a></p>
+<div class="actions"><button id="decline" type="button">Không đồng ý</button><button id="accept" class="primary" type="button">Tôi đã đọc và đồng ý</button></div>
+<div class="done ok"><p><b>Cảm ơn bạn!</b> Bước tiếp theo: mở Zalo Web, đăng nhập như bình thường (quét mã QR nếu được hỏi). Desktop Y! hiện ra sau khi Zalo đã đăng nhập.</p><p><button id="open-zalo" class="primary" type="button">Mở Zalo Web</button></p></div>
+<div class="done no"><p>Đã tắt desktop: Zalo Web giữ nguyên giao diện gốc. Muốn dùng lại, bấm biểu tượng Your Messenger trên thanh công cụ, bật "Bật desktop Y! trên Zalo Web" rồi đọc lại điều khoản. Muốn gỡ hẳn, vào <code>chrome://extensions</code> và bấm Xóa.</p></div>
+</div>
+<script src="welcome.js"></script>
+</body>
+</html>

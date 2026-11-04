@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Yahoo Retro for Facebook — Local Preview",
+  "version": "0.6.0",
+  "description": "Lớp giao diện Yahoo thử nghiệm trên Facebook Messages. Giữ chức năng chat gốc.",
+  "permissions": ["storage"],
+  "action": {"default_popup": "popup.html", "default_title": "Yahoo Retro"},
+  "content_scripts": [{
+    "matches": ["https://www.facebook.com/messages*", "https://web.facebook.com/messages*", "https://facebook.com/messages*"],
+    "js": ["layout.js", "actions.js", "windows.js", "transcript.js", "buddies.js", "chrome.js", "content.js"], "css": ["skin.css", "v2-final.css"], "run_at": "document_idle"
+  }],
+  "web_accessible_resources": [{"resources":["assets/*"],"matches":["https://www.facebook.com/*","https://web.facebook.com/*","https://facebook.com/*"]}],
+  "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'"}
+}
+
+
+
