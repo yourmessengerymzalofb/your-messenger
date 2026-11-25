@@ -4,3 +4,5 @@ dist/
 *.crx
 extension/yahoo/app/
 extension/yahoo/static/
+# HD install video: attached to the GitHub release instead (25 MB)
+docs/video/huong-dan-cai-your-messenger-0.3.0.mp4

@@ -2,6 +2,11 @@
 
 Chrome extension (MV3) hiển thị **Zalo Web**, **Facebook Messages** và **Telegram Web** trong giao diện phong cách **YM v2**, gom chung một danh sách bạn. Dự án hoài niệm phi thương mại, không liên kết với Yahoo, Zalo, Meta hay Telegram. Tên, logo, âm thanh và emoticon Y! thuộc về chủ sở hữu (xem [NOTICE.md](NOTICE.md)).
 
+- Tải bản mới nhất: [Releases](https://github.com/yourmessengerymzalofb/your-messenger/releases/latest) (zip kèm mã SHA-256).
+- Video hướng dẫn cài (quay trên 0.3.0, các bước cài 0.4.0 vẫn như vậy): [docs/video/huong-dan-cai-your-messenger-0.3.0-nhe.mp4](docs/video/huong-dan-cai-your-messenger-0.3.0-nhe.mp4) (7 MB); bản nét hơn (25 MB) đính kèm trong [release 0.4.0](https://github.com/yourmessengerymzalofb/your-messenger/releases/tag/v0.4.0-beta.1).
+
+  [![Video hướng dẫn cài Your Messenger](docs/video/huong-dan-cai-your-messenger-0.3.0-poster.jpg)](docs/video/huong-dan-cai-your-messenger-0.3.0-nhe.mp4)
+
 - Người dùng beta: [docs/CAI-DAT.md](docs/CAI-DAT.md) (cài đặt), [extension/safety.html](extension/safety.html) (an toàn & bản quyền, cũng mở được từ popup).
 - Nghiệm thu trước mỗi bản phát hành: [qa/ACCEPTANCE-0.3.md](qa/ACCEPTANCE-0.3.md).
 - Mã nguồn công khai: https://github.com/yourmessengerymzalofb/your-messenger (không kèm client YM v2). Giấy phép **PolyForm Noncommercial 1.0.0** ([LICENSE.md](LICENSE.md)), chỉ dùng phi thương mại; tài nguyên Yahoo không thuộc giấy phép này (xem [NOTICE.md](NOTICE.md)).

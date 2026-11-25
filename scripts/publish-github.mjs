@@ -12,8 +12,9 @@ import {execFileSync} from 'node:child_process';
 import {readFileSync,rmSync} from 'node:fs';
 
 // fixtures/zalo/reference/v2, v2-reference.html and the Zalo skin's vendor/v2.css keep YM v2's styles and
-// markup unchanged (v2.css only scopes the selectors). docs/codex/ holds notes for the YM v2 site's own work.
-const EXCLUDE=['vendor/yahoo-v2/','fixtures/zalo/reference/v2/','fixtures/zalo/demo/v2-reference.html','extension/adapters/zalo/vendor/v2.css','docs/community-post/VOTE-RESULTS.md','docs/codex/'];
+// markup unchanged (v2.css only scopes the selectors). docs/codex/ holds notes for the YM v2 site's own work;
+// v2-vote/NOTES.md is the post's internal note (not for posting).
+const EXCLUDE=['vendor/yahoo-v2/','fixtures/zalo/reference/v2/','fixtures/zalo/demo/v2-reference.html','extension/adapters/zalo/vendor/v2.css','docs/community-post/VOTE-RESULTS.md','docs/community-post/v2-vote/NOTES.md','docs/codex/'];
 const AUTHOR={name:'yourmessengerymzalofb',email:'352232371+yourmessengerymzalofb@users.noreply.github.com'};
 const REMOTE='github',BRANCH='public';
 const args=process.argv.slice(2),flag=f=>args.includes(f);
