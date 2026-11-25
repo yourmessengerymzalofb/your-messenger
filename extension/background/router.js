@@ -28,8 +28,9 @@ globalThis.YahooHubRouter=chromeApi=>{
     if(!rec){post(hub,{type:kind+'Result',source,key,requestId,ok:false,reason:'no-source'});return;}
     // Only keys the source itself published can be opened; sends target the live conversation.
     if(kind==='open'&&!rec.entries.some(e=>e.key===key)&&rec.transcript?.key!==key){post(hub,{type:'openResult',source,key,requestId,ok:false,reason:'unknown-key'});return;}
-    pending.set(requestId,{hub,port:rec.port,source,key,kind,timer:setTimeout(()=>settle(requestId,{ok:false,reason:'timeout'}),TIMEOUT)});
-    if(!post(rec.port,{type:kind,key,requestId,...(kind==='send'?{text:payload.text}:kind==='call'?{media:payload.media}:{})}))settle(requestId,{ok:false,reason:'no-source'});
+    // Pictures take longer: Facebook uploads them before its Send can be pressed.
+    pending.set(requestId,{hub,port:rec.port,source,key,kind,timer:setTimeout(()=>settle(requestId,{ok:false,reason:'timeout'}),payload.images?.length?60000:TIMEOUT)});
+    if(!post(rec.port,{type:kind,key,requestId,...(kind==='send'?{text:payload.text,...(payload.images?.length?{images:payload.images}:{})}:kind==='call'?{media:payload.media}:{})}))settle(requestId,{ok:false,reason:'no-source'});
   }
   async function reveal(source){
     const rec=active(source);if(!rec)return;
@@ -39,11 +40,13 @@ globalThis.YahooHubRouter=chromeApi=>{
     if(!m||typeof m!=='object')return;
     const def=REG.source(m.source),key=typeof m.key==='string'?m.key.slice(0,P.LIMITS.key):'';
     if(m.type==='open'&&def&&key)forward(hub,'open',def.id,key,m);
-    else if(m.type==='send'&&def&&key){const text=P.outgoing(m.text);if(text)forward(hub,'send',def.id,key,{requestId:m.requestId,text});}
+    else if(m.type==='send'&&def&&key){const text=P.outgoing(m.text),images=REG.source(def.id)?.uploads?P.uploads(m.images):[];if(text||images.length)forward(hub,'send',def.id,key,{requestId:m.requestId,text,images});}
     else if(m.type==='call'&&def&&key&&P.CALLS.includes(m.media))forward(hub,'call',def.id,key,m);
     // New message (to start a group) on the source tab; the tab comes forward once it is open.
     else if(m.type==='compose'&&def)forward(hub,'compose',def.id,'',m);
     else if(m.type==='info'&&def&&key)forward(hub,'info',def.id,key,m);
+    // More chats in the list ("Tải thêm"): the source tab scrolls its own list.
+    else if(m.type==='more'&&def)forward(hub,'more',def.id,'',m);
     else if(m.type==='reveal'&&def)reveal(def.id);
     // The desktop stays in front; the source tab loads in the background (pin it to keep it).
     else if(m.type==='launch'&&def&&!tabs.get(def.id)?.length)chromeApi.tabs.create({url:def.openUrl,active:false}).catch(()=>{});
@@ -55,7 +58,7 @@ globalThis.YahooHubRouter=chromeApi=>{
     if(m.type==='snapshot'){
       rec.state=P.state(m.state);rec.entries=rec.state==='ready'?P.roster(m.entries):[];rec.transcript=rec.state==='ready'?P.transcript(m.transcript):null;rec.profile=P.profile(rec.state==='ready'?m.profile:null);
     }else if(m.type==='focus')rec.order=++order;
-    else if(m.type==='openResult'||m.type==='sendResult'||m.type==='callResult'||m.type==='composeResult'||m.type==='infoResult'){
+    else if(m.type==='openResult'||m.type==='sendResult'||m.type==='callResult'||m.type==='composeResult'||m.type==='infoResult'||m.type==='moreResult'){
       const p=pending.get(P.requestId(m.requestId));if(p&&p.port===rec.port&&p.kind+'Result'===m.type)settle(m.requestId,m);
       return;
     }else return;

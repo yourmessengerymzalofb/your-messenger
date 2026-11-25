@@ -32,7 +32,9 @@ export function createChannelWindow(root,{id,label,icon,hint,searchPlaceholder,n
   // Rows come from the channel adapter; keep the search, the count and the hint in step with them.
   function refresh(){
     const q=fold(input.value),rows=[...slot.querySelectorAll('.contact-row')];
-    for(const row of rows){const name=fold(row.querySelector('.contact-first b')?.textContent||row.textContent);row.hidden=!!q&&!name.includes(q);}
+    // Rows past a section's page (data-ym-paged) show only while a search finds them.
+    for(const row of rows){const name=fold(row.querySelector('.contact-first b')?.textContent||row.textContent);row.hidden=q?!name.includes(q):row.hasAttribute('data-ym-paged');}
+    for(const more of slot.querySelectorAll('.ym-more'))more.hidden=!!q;
     // A status line or a note from the adapter replaces the waiting hint.
     waitingNote.hidden=rows.length>0||!!slot.querySelector('.ym-channel-status,.ym-channel-hint');count.textContent=rows.length?rows.length+' hội thoại':'';
   }

@@ -1,6 +1,6 @@
 # Thêm một app chat web mới vào Yahoo Hub
 
-Mỗi app chat (Zalo, Facebook, sau này Telegram Web, WhatsApp Web…) là một **adapter** chạy trong tab của chính app đó. Adapter chỉ đọc những gì trang đang hiển thị và thao tác qua control gốc. Không gọi API riêng, không đọc cookie hay token.
+Mỗi app chat (Zalo, Facebook, Telegram Web, sau này WhatsApp Web…) là một **adapter** chạy trong tab của chính app đó. Adapter chỉ đọc những gì trang đang hiển thị và thao tác qua control gốc. Không gọi API riêng, không đọc cookie hay token.
 
 ## 1. Hợp đồng adapter
 
@@ -34,8 +34,8 @@ if(globalThis.chrome?.runtime?.id&&globalThis.YahooHubBridge)globalThis.YahooHub
 Thêm một entry vào `extension/shared/registry.js`:
 
 ```js
-{id:'telegram',label:'Telegram',openUrl:'https://web.telegram.org/a/',groups:['Friends','Group'],
- match:u=>u.origin==='https://web.telegram.org'}
+{id:'telegram',label:'Telegram',openUrl:'https://web.telegram.org/a/',groups:['Online','Bạn bè','Nhóm'],
+ match:u=>u.origin==='https://web.telegram.org'&&u.pathname.startsWith('/a/')}
 ```
 
 `groups` là thứ tự các nhóm con trong buddy list.
@@ -49,6 +49,14 @@ shared/protocol.js, shared/compose.js, shared/bridge.js, adapters/<id>/hub-adapt
 ```
 
 Nếu adapter có skin Yahoo riêng (như Zalo/FB) thì đặt các file skin trước các file trên. Không thêm `host_permissions`, không thêm quyền mới.
+
+## 3b. Phía desktop
+
+- Một file nhỏ như `src/yahoo/telegram-channel.mjs`: gọi `hostSource(root,{id,label,icon,tab,oldTab,hint,search,groups,calls})` của `src/yahoo/source-channel.mjs`. Khung chung lo danh sách, cửa sổ chat, gửi tin; mọi app dùng chung một kết nối tới router (`src/yahoo/hub-port.mjs`).
+- `src/yahoo/boot.mjs`: thêm vào danh sách `all`, và vào `groupActions` nếu app có nút tạo nhóm.
+- Màu: `.ym-<id>-window`, `.ym-src-<id>`, `.ym-<id>-chat`, `.ym-unread-row[data-app=<id>]` trong `src/yahoo/style.mjs`.
+- Popup: một ô `data-app="<id>"` trong `extension/popup.html`.
+- Điều khoản (`extension/shared/terms.json`, đổi `version`) và `extension/safety.html`: thêm tên app và quyền mới.
 
 ## 4. Quy tắc bắt buộc
 

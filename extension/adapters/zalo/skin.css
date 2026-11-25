@@ -58,11 +58,19 @@ html[data-yzr-active] #messageViewScroll .chat-item{display:block!important;posi
 /* Reactions hang off the bubble's corner in Zalo. A Yahoo text line has no bubble box (display:contents),
    so they would all fall to the end of the history: keep them at their own message, in its right gutter. */
 html[data-yzr-active] #messageViewScroll .chat-item .message-reaction-container{top:auto!important;bottom:-11px!important;right:4px!important}
+/* That button (and Zalo's hover menu) hangs into the next message, which is painted over it: the
+   pointer on its way there would reach the next message, and Zalo hides the button. The message under
+   the pointer comes to the front instead. */
+html[data-yzr-active] #messageViewScroll .chat-item:is(:hover,:focus-within){z-index:3!important}
 /* Photo albums hang theirs from a box past the album's edge, under the window border: use the message box. */
 html[data-yzr-active] #messageViewScroll .chat-item div:has(> .message-reaction-container){position:static!important}
 html[data-yzr-active] #messageViewScroll [data-yzr-message]::before{content:attr(data-yzr-sender);display:inline;font-weight:bold;color:#5b338e;margin-right:5px;font-family:Arial,sans-serif}
 html[data-yzr-active] #messageViewScroll .me[data-yzr-message]::before{font-weight:normal;color:#676767}
-html[data-yzr-active] #messageViewScroll .card{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;max-width:100%!important;padding:0!important;font-family:Arial,sans-serif!important;font-size:15px;line-height:1.55;color:#000}
+html[data-yzr-active] #messageViewScroll .card{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;max-width:100%!important;padding:0!important;font-family:Arial,sans-serif!important;font-size:13px;line-height:1.55;color:#000}
+/* Message text at 13px Arial, as YM shows a message at its default size ("10"; vendor text-style.mjs);
+   the sender stays at the window's 15px, like YM's. A size set on the message itself is kept. */
+html[data-yzr-active] #messageViewScroll .text-message__container:not([style*="font-size"]){font-size:13px!important;font-family:Arial,sans-serif!important}
+html[data-yzr-active] #messageViewScroll .text-message__container :not(small):not([style*="font-size"]){font-size:inherit!important}
 html[data-yzr-active] #messageViewScroll .card small{font:9px Arial!important;color:#bbb!important;display:block;margin-top:2px}
 /* Message text can be selected, copied and its links clicked. Zalo turns the pointer off for message
    content (.prevent-pointer-event) and lays a transparent hover area (.chat-message::before) over the
@@ -79,6 +87,11 @@ html[data-yzr-active] .yzr-avatars{position:absolute;right:6px;top:var(--yzr-bod
 html[data-yzr-active] .yzr-avatars>small{font-size:9px;color:#888;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 html[data-yzr-active] .yzr-avatars img{width:100%;height:100%;object-fit:cover}
 html[data-yzr-active] #chat-box-input-container-id{background:white!important;flex:0 0 auto!important;height:75px!important;max-height:75px!important;min-height:75px!important;padding:0 80px 0 0!important;position:relative!important}
+/* Pasted or picked images wait in Zalo's tray inside the composer: let it grow so they show (chrome.js pendingTray). */
+html[data-yzr-active] [data-yzr-attachments] #chat-box-input-container-id{height:auto!important;max-height:260px!important;overflow-y:auto!important}
+/* The tray (.chat-box-input__bottom) sits inside #chatInput, which otherwise fills the 75px composer. */
+html[data-yzr-active] [data-yzr-attachments] #chat-box-input-container-id #chatInput{height:auto!important;max-height:none!important;flex:none!important}
+html[data-yzr-active] [data-yzr-attachments] #chat-box-input-container-id>.yzr-sendbar{top:37px}
 html[data-yzr-active] #chat-box-bar-id{height:0!important;min-height:0!important;overflow:hidden!important;opacity:0;pointer-events:none}
 html[data-yzr-active] #chat-input-container-id{background:white!important;border:0!important;min-height:70px!important;margin:0!important;padding:8px 9px!important;max-width:100%!important}
 html[data-yzr-active] #richInput,html[data-yzr-active] #chat-box-input-container-id .input-v4[contenteditable=true]{font-family:Arial!important;font-size:13px;line-height:1.5;min-height:0!important;height:52px!important;max-height:52px!important;overflow:auto!important;width:100%!important;outline:none!important}
@@ -90,7 +103,10 @@ html[data-yzr-active] .yzr-parked-note{flex:1;padding:15px;background:#fff;color
 html[data-yzr-active] .yzr-parked-note button{font:11px Tahoma}
 html[data-yzr-active] .yzr-resize{border:0;background:transparent;padding:0}
 html[data-yzr-active] [data-yzr-portal]{position:fixed!important;inset:auto!important;left:var(--yzr-portal-x)!important;top:var(--yzr-portal-y)!important;width:var(--yzr-portal-w)!important;height:var(--yzr-portal-h)!important;margin:0!important;max-width:100vw;max-height:100dvh;overflow:auto;visibility:visible!important;pointer-events:auto!important;opacity:1!important}
-html[data-yzr-active] [data-yzr-portal] *{visibility:visible!important;pointer-events:auto!important}
+html[data-yzr-active] [data-yzr-portal]:not([data-yzr-fullscreen]) *{visibility:visible!important;pointer-events:auto!important}
+/* A photo/video viewer is shown from its own box only: its parts keep Zalo's own visibility and
+   pointer-events, so a see-through layer (pointer-events:none) never covers its X or arrows. */
+html[data-yzr-active] [data-yzr-portal][data-yzr-fullscreen]{visibility:visible!important;pointer-events:auto!important}
 html[data-yzr-active] [data-yzr-portal]::backdrop{background:transparent;pointer-events:none}
 /* Native Zalo dialogs/viewers cover the whole viewport, including the XP bar. */
 html[data-yzr-active] [data-yzr-portal][data-yzr-fullscreen]{left:0!important;top:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;border:0!important;padding:0!important}
@@ -202,3 +218,7 @@ html[data-yzr-active] .format-options>button[data-chat-control=font]{min-width:4
 
 /* The OA section of the Zalo list hides while there is no verified Official Account. */
 .yzr-buddy-groups .contact-group[hidden]{display:none!important}
+
+/* buddies.js turns on Zalo's "Người lạ" filter through its Phân loại menu: the menu stays unseen meanwhile,
+   and with opacity 0 the skin does not lift it above the desktop either. */
+html[data-yzr-quiet] .popover-v3{opacity:0!important;pointer-events:none!important}

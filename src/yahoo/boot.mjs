@@ -9,6 +9,7 @@ import {watchMedia} from './media.mjs';
 import {injectCss,ROOT_CSS} from './style.mjs';
 import {createChannelWindow} from './channel-window.mjs';
 import {hostFacebook} from './facebook-channel.mjs';
+import {hostTelegram} from './telegram-channel.mjs';
 import {combineBuddyLists,YAHOO_ICON} from './buddy-tabs.mjs';
 import {startQuickId} from './quick-id.mjs';
 import {acceptTerms,zaloSignedIn} from './terms.mjs';
@@ -46,15 +47,22 @@ export async function boot(){
   startLogin();
   // Y! 360° links open in a desktop window instead of chat.zalo.me/360.
   const y360=createY360Window(YM_ROOT);ymLinks.blog=url=>void y360.open(url);
+  // The desktop's Blog 360 icon: YM v2 handles it in its own Y! 360° window, which the build leaves out.
+  YM_ROOT.addEventListener('click',e=>{
+    if(e.defaultPrevented||e.button!==0||!e.target.closest?.('#blog360-shortcut'))return;
+    if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)globalThis.open(YAHOO_ORIGIN+'/360','_blank','noopener');
+    else void y360.open(YAHOO_ORIGIN+'/360');
+  });
   // After each sign-in, Y! 360° opens beside YM!'s buddy list, last of all: once the page has loaded,
   // the buddy list has drawn and the browser is idle. Closing it keeps it closed until the next sign-in.
   openBlogAfterSignIn(y360);
-  const facebook=hostFacebook(YM_ROOT),all=[hostZalo(),facebook?.buddies].filter(Boolean);
+  const facebook=hostFacebook(YM_ROOT),telegram=hostTelegram(YM_ROOT),all=[hostZalo(),facebook?.buddies,telegram?.buddies].filter(Boolean);
   // Content-script world only (Zalo's own scripts cannot see it): tests and debugging.
   if(facebook)globalThis.YahooDesktopFacebook=facebook;
-  // Popup choices: one Yahoo buddy list with a tab per app (default) or a window per app, and
-  // which apps show at all (a hidden app keeps working underneath, it is just not listed).
-  const {separate,apps}=await layout(),lists=all.filter(l=>apps[l.id]!==false);
+  if(telegram)globalThis.YahooDesktopTelegram=telegram;
+  // Popup choice: one Yahoo buddy list with a tab per app (default) or a window per app. Which apps
+  // Tất cả shows is picked in its own dropdown (buddy-tabs.mjs); every app keeps its tab.
+  const {separate}=await layout(),lists=all;
   if(separate)lists.forEach((list,i)=>void list.mount(i+1));
   // Zalo and Facebook work without a Y! ID. Signed out, a guest YM! window holds
   // them (tabs) and, in the Yahoo list, the sign-up prompt; Yahoo's sign-in window stays hidden
@@ -63,7 +71,7 @@ export async function boot(){
   // Signed in: the one-time "Đổi nick" by the profile name, while the server allows it.
   globalThis.YahooDesktopNickname=startNicknameChange(YM_ROOT);
   const guest=createChannelWindow(YM_ROOT,{id:'yahoo',label:'Y!',brand:'YM!',icon:YAHOO_ICON,name:'Chưa đăng nhập Y!',
-    hint:'Zalo, Facebook dùng ngay',status:'● Khách',searchPlaceholder:separate?'':'Tìm bạn Zalo, Facebook...'});
+    hint:'Zalo, Facebook, Telegram dùng ngay',status:'● Khách',searchPlaceholder:separate?'':'Tìm bạn Zalo, Facebook, Telegram...'});
   guest.list.querySelector('.ym-channel-hint')?.remove();
   if(quick)guest.slot.append(quick.prompt);
   const boot=YM_ROOT.querySelector('#boot');
@@ -71,7 +79,7 @@ export async function boot(){
   const set=next=>{
     if(next===mode)return;mode=next;tabs?.destroy();tabs=null;
     if(next==='guest'){YM_ROOT.dataset.ymGuest='';void guest.mount(0);if(!separate)tabs=combineBuddyLists(YM_ROOT,lists,{yahoo:guest.list,search:guest.input});}
-    else{delete YM_ROOT.dataset.ymGuest;delete YM_ROOT.dataset.ymAuth;guest.unmount();if(!separate)tabs=combineBuddyLists(YM_ROOT,lists,{groups:groupActions(facebook,lists)});}
+    else{delete YM_ROOT.dataset.ymGuest;delete YM_ROOT.dataset.ymAuth;guest.unmount();if(!separate)tabs=combineBuddyLists(YM_ROOT,lists,{groups:groupActions({facebook,telegram},lists)});}
     globalThis.YahooDesktopTabs=tabs;
   };
   // Guest once the session check has answered "signed out" (or after Đăng xuất); member on sign-in.
@@ -101,18 +109,29 @@ function openBlogAfterSignIn(y360){
 }
 
 // "Tạo nhóm chat" on the Zalo and Facebook tabs: that app's own control, on the user's click.
-function groupActions(facebook,lists){
+function groupActions({facebook,telegram},lists){
   const shown=new Set(lists.map(l=>l.id)),groups={};
   if(shown.has('zalo'))groups.zalo=e=>{if(!globalThis.YahooZaloActions?.invoke(document.getElementById('sidebarNav'),'group',e))toast('Không tìm thấy nút Tạo nhóm của Zalo.');};
   if(facebook&&shown.has('facebook'))groups.facebook=()=>facebook.compose().then(r=>toast(r.ok?'Đã chuyển sang tab Facebook: chọn người để tạo nhóm.':'Facebook: chưa mở được Tin nhắn mới ('+(r.reason||'lỗi')+').'));
+  if(telegram&&shown.has('telegram'))groups.telegram=()=>telegram.compose().then(r=>toast(r.ok?'Đã mở menu Tạo mới trên tab Telegram: chọn Nhóm mới.':'Telegram: chưa mở được menu Tạo mới ('+(r.reason||'lỗi')+').'));
   return groups;
 }
 let toastTimer=0;
 function toast(text){const n=YM_ROOT.querySelector('#toast');if(!n||!text)return;n.textContent=text;n.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>n.classList.remove('show'),3500);}
 
+// The popup's old "Hiện trong danh sách" ticks (ymApps) move once into the Tất cả dropdown's
+// hidden apps (ymBuddyAllHidden), then go away.
 async function layout(){
-  try{const v=await globalThis.chrome?.storage?.local?.get({ymBuddyLayout:'tabs',ymApps:{}});return {separate:v?.ymBuddyLayout==='separate',apps:v?.ymApps||{}};}
-  catch{return {separate:false,apps:{}};}
+  const store=globalThis.chrome?.storage?.local;
+  try{
+    const v=await store.get({ymBuddyLayout:'tabs',ymApps:null,ymBuddyAllHidden:[]});
+    if(v.ymApps&&typeof v.ymApps==='object'){
+      const off=Object.keys(v.ymApps).filter(id=>v.ymApps[id]===false),had=Array.isArray(v.ymBuddyAllHidden)?v.ymBuddyAllHidden:[];
+      if(off.length)await store.set({ymBuddyAllHidden:[...new Set([...had,...off])]});
+      await store.remove('ymApps');
+    }
+    return {separate:v.ymBuddyLayout==='separate'};
+  }catch{return {separate:false};}
 }
 
 // The Zalo skin (adapters/zalo, a classic content script in this same world) switches to host
@@ -123,7 +142,12 @@ function hostZalo(){
   new MutationObserver(()=>zalo.setProfile(globalThis.YahooZaloActions?.ownAvatar?.(document.getElementById('sidebarNav'))||'')).observe(zalo.slot,{childList:true});
   // The skin sizes its windows above a taskbar of this height.
   document.documentElement.style.setProperty('--xp-bar-height',getComputedStyle(YM_ROOT).getPropertyValue('--xp-bar-height').trim()||'38px');
-  skin.attach({slot:()=>zalo.slot,tasks:()=>YM_ROOT.querySelector('.xp-tasks'),notice:toast});
+  let conversation=null;
+  zalo.getConversation=()=>conversation;
+  skin.attach({slot:()=>zalo.slot,tasks:()=>YM_ROOT.querySelector('.xp-tasks'),notice:toast,conversation(node,name,avatar){
+    conversation=node?{node,name,avatar}:null;
+    YM_ROOT.dispatchEvent(new Event('ym-zalo-conversation'));
+  }});
   return zalo;
 }
 const ZALO_ICON='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#0068ff"/><text x="8" y="12" font-family="Tahoma,Arial" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">Z</text></svg>');

@@ -9,30 +9,27 @@
 <header><img src="icons/icon-32.png" alt=""><h1>Your Messenger</h1><small id="version"></small></header>
 <button id="open-zalo" class="classic-button primary" type="button">Mở Zalo Web với giao diện Y!</button>
 <section>
-<h2>Desktop trên Zalo Web</h2>
-<label><input type="checkbox" id="ym-desktop"> Bật desktop Y! trên Zalo Web <small>(F5 tab Zalo sau khi đổi)</small></label>
-<fieldset id="ym-layout"><legend>Danh sách bạn <small>(F5 tab Zalo)</small></legend>
-<label><input type="radio" name="ym-layout" value="tabs"> Gom chung, có tab Tất cả / Y! / Zalo / Facebook</label>
-<label><input type="radio" name="ym-layout" value="separate"> 3 cửa sổ riêng, mỗi app một cửa sổ</label>
-</fieldset>
-<fieldset id="ym-apps"><legend>Hiện trong danh sách <small>(F5 tab Zalo)</small></legend>
-<label><input type="checkbox" data-app="zalo"> Zalo</label>
-<label><input type="checkbox" data-app="facebook"> Facebook <small>(cần một tab facebook.com/messages)</small></label>
-</fieldset>
+<h2>Giao diện</h2>
+<label class="switch"><input type="checkbox" id="ym-desktop"> Dùng YM! trên Zalo Web</label>
+<div id="ym-on">
+<label><input type="radio" name="ym-layout" value="tabs"> Một cửa sổ YM! cho mọi app <small>(chọn app ở nút Tất cả ▾)</small></label>
+<label><input type="radio" name="ym-layout" value="separate"> Mỗi app một cửa sổ riêng</label>
+</div>
+<div id="ym-off" hidden>
+<label><input type="checkbox" data-skin="yzrEnabled"> Chỉ đổi màu Zalo sang kiểu Y! <small>(giữ bố cục Zalo)</small></label>
+</div>
+<button id="save" class="classic-button primary" type="button" disabled>Lưu</button>
+<p class="hint" id="save-hint">Bấm Lưu: plugin lưu và tự tải lại tab Zalo.</p>
 </section>
 <section id="yahoo-id" hidden>
-<h2>Y! ID do plugin tạo</h2>
+<h2 id="yahoo-id-title">Y! ID trên máy này</h2>
 <p class="id-line">Nick: <b id="yahoo-id-nick"></b></p>
 <p class="id-line"><code id="yahoo-id-password">••••••••••••••••</code></p>
 <div class="row"><button id="yahoo-id-show" class="classic-button" type="button">Hiện mật khẩu</button><button id="yahoo-id-copy" class="classic-button" type="button">Chép</button></div>
-<p class="note">Mật khẩu chỉ lưu trong plugin trên máy này. Dùng nó để đăng nhập YM v2 ở máy khác.</p>
+<p class="note">Plugin tạo nick này và lưu mật khẩu trên máy này. Dùng nó để đăng nhập YM v2 ở máy khác.</p>
 </section>
-<section>
-<h2>Giao diện Y! trên tab gốc</h2>
-<label><input type="checkbox" data-skin="yzrEnabled"> Zalo Web <small>(chỉ dùng khi tắt desktop)</small></label>
-</section>
-<p class="note">Đăng nhập Zalo Web và Facebook trước như bình thường; plugin không hỏi và không thấy mật khẩu Zalo hay Facebook. Nội dung chat không rời trình duyệt.</p>
-<p class="disclaimer">Sản phẩm hoài niệm, lưu hành nội bộ nhóm Codex VN, không có mục đích thương mại. Không liên kết với Yahoo, Zalo hay Meta; tên và hình Yahoo thuộc về chủ sở hữu. <a href="safety.html" target="_blank">Điều khoản, an toàn &amp; bản quyền</a></p>
+<p class="note">Facebook cần một tab facebook.com/messages, Telegram cần một tab web.telegram.org/a/. Đăng nhập các app như bình thường; plugin không thấy mật khẩu của chúng, nội dung chat không rời trình duyệt.</p>
+<p class="disclaimer">Sản phẩm hoài niệm, lưu hành nội bộ nhóm Codex VN, không có mục đích thương mại. Không liên kết với Yahoo, Zalo, Meta hay Telegram; tên và hình Yahoo thuộc về chủ sở hữu. <a href="safety.html" target="_blank">Điều khoản, an toàn &amp; bản quyền</a></p>
 <script src="popup.js"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ import {zaloWithDesktop} from './desktop-fixture.mjs';
 const fb={id:'facebook',label:'Facebook',connected:true,state:'ready',transcript:null,
   entries:[{key:'/messages/t/1',name:'Lan Anh',group:'Online',unread:true,avatar:'',time:''},{key:'/messages/t/2',name:'Hội 9x',group:'Group',unread:false,avatar:'',time:''}]};
 
-test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook in the Yahoo window',async()=>{
+test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook / Telegram in the Yahoo window',async()=>{
   const {dom,d,skin,stored,hubPorts}=await zaloWithDesktop({hub:true});
   try{
     const root=d.getElementById('ym-root');
@@ -17,11 +17,11 @@ test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook in the 
     assert.equal(root.querySelector('.ym-facebook-window'),null,'no separate Facebook window');
     assert.equal(root.querySelector('.xp-tasks .ym-channel-task'),null,'no extra taskbar buttons');
     const tabs=[...buddies.querySelectorAll('.ym-buddy-tab')];
-    assert.deepEqual(tabs.map(t=>t.textContent),['Tất cả','Y!','Zalo','Facebook']);
+    assert.deepEqual(tabs.map(t=>t.textContent),['Tất cả','Y!','Zalo','Facebook','Telegram']);
     assert.equal(tabs[0].getAttribute('aria-selected'),'true');
     assert.ok(buddies.contains(slot),'the Zalo list lives in the Yahoo buddy window');
     const box=buddies.querySelector('.ym-combined'),sections=[...box.querySelectorAll('.ym-source:not(.ym-unread-source)')];
-    assert.deepEqual(sections.map(s=>s.className),['ym-source ym-src-yahoo','ym-source ym-src-zalo ym-channel-source','ym-source ym-src-facebook ym-channel-source']);
+    assert.deepEqual(sections.map(s=>s.className),['ym-source ym-src-yahoo','ym-source ym-src-zalo ym-channel-source','ym-source ym-src-facebook ym-channel-source','ym-source ym-src-telegram ym-channel-source']);
     assert.ok(box.querySelector('.ym-src-yahoo #contacts'),'Yahoo contacts stay the same node');
     assert.ok(sections.every(s=>!s.hidden&&!s.querySelector('.ym-source-head').hidden),'Tất cả shows every app with a heading');
 
@@ -30,7 +30,7 @@ test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook in the 
     const zaloRow=d.createElement('button');zaloRow.className='contact-row';zaloRow.innerHTML='<span class="contact-text"><span class="contact-first"><b>Nhóm lớp</b><span class="contact-unread">3</span></span></span>';
     slot.append(zaloRow);await tick(10);
     const count=i=>{const c=tabs[i].querySelector('.ym-tab-unread');return c.hidden?'':c.textContent;};
-    assert.deepEqual([0,1,2,3].map(count),['4','','3','1']);
+    assert.deepEqual([0,1,2,3,4].map(count),['4','','3','1','']);
 
     // Tất cả → "Chưa đọc": copies of the unread rows of every app; a click goes to the real row.
     const unread=box.querySelector('.ym-unread-source');
@@ -39,6 +39,40 @@ test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook in the 
     assert.deepEqual(copies.map(c=>[c.dataset.app,c.querySelector('.contact-first b').textContent]),[['zalo','Nhóm lớp'],['facebook','Lan Anh']]);
     const clicks=[];zaloRow.onclick=e=>clicks.push(e.type);
     copies[0].click();assert.deepEqual(clicks,['click'],'the Zalo row gets the click');
+    const attention=row=>row.hasAttribute('data-ym-unread-attention');
+    const facebookRow=sections[2].querySelector('[data-ym-key="/messages/t/1"]');
+    assert.ok([zaloRow,facebookRow,...copies].every(attention),'unread with no window pulses in both lists');
+    assert.match(d.defaultView.getComputedStyle(zaloRow.querySelector('b')).animation,/ym-contact-unread-pulse/);
+    assert.ok(!attention(sections[2].querySelector('[data-ym-key="/messages/t/2"]')),'read contacts stay quiet');
+
+    const hub=hubPorts[0];
+    const opening=globalThis.YahooDesktopFacebook.openWindow('/messages/t/1','Lan Anh');
+    await tick(20);
+    const fbChat=root.querySelector('.ym-facebook-chat');
+    assert.equal(fbChat.dataset.ymChatKey,'/messages/t/1');
+    assert.ok(facebookRow.querySelector('.contact-unread'),'the unread badge may outlast opening');
+    assert.ok(!attention(facebookRow)&&!attention(copies[1]),'opening Facebook stops both highlights');
+    const ask=hub.client.sent.at(-1);
+    hub.server.postMessage({type:'openResult',requestId:ask.requestId,ok:true});
+    await opening;
+    fbChat.querySelector('[data-chat-control="chat-close"]').click();await tick();
+    assert.ok(attention(facebookRow)&&attention(copies[1]),'closing resumes while still unread');
+
+    const nativeChat=d.createElement('div');
+    d.body.append(nativeChat);
+    skin.attached.conversation(nativeChat,'Nhóm lớp');await tick();
+    assert.ok(!attention(zaloRow)&&!attention(copies[0]),'a visible Zalo window stops both highlights');
+    assert.ok(attention(facebookRow),'only the open conversation is suppressed');
+    nativeChat.setAttribute('data-yzr-minimized','true');await tick();
+    assert.ok(attention(zaloRow)&&attention(copies[0]),'minimizing resumes while still unread');
+    nativeChat.removeAttribute('data-yzr-minimized');await tick();
+    assert.ok(!attention(zaloRow)&&!attention(copies[0]),'restoring stops the highlight again');
+    skin.attached.conversation(null);nativeChat.remove();await tick();
+    const zaloBadge=zaloRow.querySelector('.contact-unread');
+    zaloBadge.remove();await tick();
+    assert.ok(!attention(zaloRow),'clearing unread removes the highlight');
+    assert.equal(unread.querySelector('[data-app=zalo]'),null);
+    zaloRow.querySelector('.contact-first').append(zaloBadge);await tick();
     assert.equal(box.firstElementChild,unread,'Chưa đọc comes first');
     // Its heading folds it away, remembered like an app's.
     const unreadHead=unread.querySelector('.ym-unread-head');unreadHead.click();
@@ -54,8 +88,19 @@ test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook in the 
 
     // A tab shows one app only and is remembered.
     tabs[2].click();
-    assert.deepEqual(sections.map(s=>s.hidden),[true,false,true]);
-    assert.ok(unread.hidden,'Chưa đọc lives in Tất cả only');
+    assert.deepEqual(sections.map(s=>s.hidden),[true,false,true,true]);
+    assert.ok(!unread.hidden,'the Zalo tab has its own Chưa đọc');
+    assert.equal(unread.firstChild.textContent,'▾Chưa đọc (1)');
+    assert.deepEqual([...unread.querySelectorAll('.ym-unread-row')].map(c=>[c.dataset.app,c.querySelector('.contact-first b').textContent]),[['zalo','Nhóm lớp']],'only Zalo rows');
+    assert.equal(box.firstElementChild,unread,'above the Zalo list');
+    unreadHead.click();assert.equal(d.defaultView.getComputedStyle(unread.querySelector('.ym-unread-list')).display,'none','its heading folds it on an app tab too');
+    unreadHead.click();assert.notEqual(d.defaultView.getComputedStyle(unread.querySelector('.ym-unread-list')).display,'none');
+    const clicked=clicks.length;unread.querySelector('.ym-unread-row').click();assert.equal(clicks.length,clicked+1,'a click still goes to the real Zalo row');
+    tabs[3].click();
+    assert.deepEqual([...unread.querySelectorAll('.ym-unread-row')].map(c=>[c.dataset.app,c.querySelector('.contact-first b').textContent]),[['facebook','Lan Anh']],'the Facebook tab: Facebook rows only');
+    tabs[4].click();assert.ok(unread.hidden,'nothing unread on Telegram: no heading');
+    tabs[1].click();assert.ok(unread.hidden,'the Yahoo tab keeps YM!\'s own list');
+    tabs[2].click();
     assert.ok(sections[1].querySelector('.ym-source-head').hidden,'no heading inside a single-app tab');
     assert.equal(tabs[2].getAttribute('aria-selected'),'true');assert.equal(box.dataset.tab,'zalo');
     await tick();assert.equal(stored.ymBuddyTab,'zalo');
@@ -84,7 +129,7 @@ test('Combined buddy list: tabs for Tất cả / Yahoo / Zalo / Facebook in the 
     assert.match(shopRow.querySelector('.contact-first').textContent,/Shop Demo.*Page/);
     assert.equal([...sections[2].querySelectorAll('summary')].at(-1).textContent,'Page (1)','Pages last in the Facebook list');
     assert.equal(unread.querySelector('.ym-unread-head').textContent,'▾Chưa đọc (2)','people only');
-    assert.equal(business.querySelector('.ym-unread-head').textContent,'▾OA / Page chưa đọc (2)');
+    assert.equal(business.querySelector('.ym-unread-head').textContent,'▾OA / Page / Bot chưa đọc (2)');
     assert.deepEqual([...business.querySelectorAll('.ym-unread-row')].map(c=>[c.dataset.app,c.querySelector('.contact-first b').textContent,c.title]),[['zalo','Nhà thuốc Demo','Zalo OA: Nhà thuốc Demo'],['facebook','Shop Demo','Facebook Page: Shop Demo']]);
     assert.equal(unread.nextElementSibling,business,'right after Chưa đọc');
     business.querySelector('.ym-unread-head').click();assert.ok(business.hasAttribute('data-folded'));

@@ -29,13 +29,13 @@ test('Facebook gets its own dark-blue buddy window and Yahoo chat windows mirror
     push({id:'facebook',label:'Facebook',connected:false,state:'closed',entries:[],transcript:null});
     // Ready: Yahoo contact rows grouped as on the Facebook skin.
     push(fb());await tick();
-    assert.deepEqual([...win.querySelectorAll('summary')].map(n=>n.textContent),['Online (1)','Group (1)']);
-    const row=win.querySelector('.contact-row');
+    assert.deepEqual([...win.querySelectorAll('summary')].map(n=>n.textContent),['Group (1)','Friends (1)'],'as on Zalo: groups first, then friends');
+    const row=win.querySelector('.contact-row[data-ym-key="/messages/t/1"]');
     assert.ok(row.classList.contains('online'));assert.ok(row.querySelector('.contact-unread'));
     assert.match(win.querySelector('.statusbar').textContent,/2 hội thoại/);
     row.click();assert.equal(hub.client.sent.length,0,'untrusted clicks never open a conversation');
     // An identical snapshot keeps the same row nodes.
-    push(fb());assert.equal(win.querySelector('.contact-row'),row);
+    push(fb());assert.equal(win.querySelector('.contact-row[data-ym-key="/messages/t/1"]'),row);
 
     // Opening asks the Facebook tab; the window is Yahoo's chat window in Facebook blue.
     const opening=view.openWindow('/messages/t/1','Lan Anh');await tick(20);
@@ -68,7 +68,7 @@ test('Facebook gets its own dark-blue buddy window and Yahoo chat windows mirror
     const unknown=[{key:'/messages/t/1',name:'Lan Anh',group:'Chưa rõ trạng thái',unread:false,avatar:'',time:''}];
     push(fb({entries:unknown,transcript:{key:'/messages/t/1',title:'Lan Anh',status:'Đang hoạt động',canSend:true,messages:[]}}));
     const lanRow=()=>root.querySelector('.contact-row[data-ym-key="/messages/t/1"]');
-    assert.equal(lanRow().querySelector('.presence-dot').className,'presence-dot');assert.match(lanRow().closest('details').querySelector('summary').textContent,/^Online/);
+    assert.equal(lanRow().querySelector('.presence-dot').className,'presence-dot');assert.match(lanRow().closest('details').querySelector('summary').textContent,/^Friends/);
     push(fb({entries:unknown,transcript:{key:'/messages/t/1',title:'Lan Anh',status:'',canSend:true,messages:[]}}));
     assert.equal(q('peer-dot').className,'presence-dot offline','not active: grey, in the window and the list');
     assert.equal(lanRow().querySelector('.presence-dot').className,'presence-dot offline');
@@ -105,6 +105,24 @@ test('Facebook gets its own dark-blue buddy window and Yahoo chat windows mirror
     assert.equal(q('message-input').value,'xin chào');
     assert.match(chat.querySelector('.ym-mirror-notice').textContent,/bản nháp/);
     assert.equal(hub.client.sent.filter(m=>m.type==='send').length,1);
+
+    // A pasted picture waits above the text box ("1 ảnh"), and Send works for it alone.
+    const W=d.defaultView,pasteFiles=files=>{const e=new W.Event('paste',{bubbles:true,cancelable:true});Object.defineProperty(e,'clipboardData',{value:{files}});q('message-input').dispatchEvent(e);return e;};
+    q('message-input').value='';q('message-input').dispatchEvent(new W.Event('input'));
+    const png=new W.File([new Uint8Array([137,80,78,71,13,10,26,10])],'shot.png',{type:'image/png'});
+    const pasted=pasteFiles([png]);assert.ok(pasted.defaultPrevented,'the picture is not pasted as text');await tick(20);
+    const tray=chat.querySelector('.ym-paste-tray');assert.equal(tray.hidden,false);assert.match(tray.textContent,/^1 ảnh/);
+    assert.match(tray.querySelector('img').getAttribute('src'),/^data:image\/png;base64,/);
+    assert.equal(q('send').disabled,false,'Send for a picture with no text');
+    pasteFiles([new W.File(['x'],'a.txt',{type:'text/plain'})]);await tick(20);assert.equal(tray.querySelectorAll('img').length,1,'only pictures');
+    const sendingPicture=view.submit('/messages/t/1');await tick(5);
+    const pic=hub.client.sent.at(-1);assert.deepEqual([pic.type,pic.text,pic.images.length],['send','',1]);assert.match(pic.images[0],/^data:image\/png;base64,/);
+    hub.server.postMessage({type:'sendResult',requestId:pic.requestId,ok:true});await sendingPicture;
+    assert.equal(tray.hidden,true,'sent: the tray empties');assert.equal(q('send').disabled,true);
+    // Removing one, or Xoá tất cả, before sending.
+    pasteFiles([png,png]);await tick(20);assert.match(tray.textContent,/^2 ảnh/);
+    tray.querySelector('.ym-paste-remove').click();assert.match(tray.textContent,/^1 ảnh/);
+    [...tray.querySelectorAll('button')].find(b=>b.textContent==='Xoá tất cả').click();assert.equal(tray.hidden,true);
 
     // The Facebook tab moves to another conversation: the window offers to reconnect.
     push(fb({transcript:{key:'/messages/t/2',title:'Hội 9x',canSend:true,messages:[]}}));

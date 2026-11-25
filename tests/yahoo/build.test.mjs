@@ -58,9 +58,10 @@ test('The bundle has no root-relative asset paths, node imports or blocked YouTu
 });
 
 test('Vendor patches apply exactly once or the build stops',()=>{
-  const code="import {createDesktop} from './desktop.mjs'; x(); return {winamp,desktop,internet,a};";
+  const code="import {createDesktop} from './desktop.mjs'; x(); const y360=createY360Desktop({desktop,notify}); return {winamp,desktop,internet,a};";
   const out=applyPatches(code,'client/desktop-host.mjs');
   assert.ok(out.includes('ymDesktopCreated(desktop);return {winamp,desktop,internet,'));
+  assert.ok(out.includes('const y360={session(){},destroy(){}};'),'the plugin keeps its own Y! 360° window');
   assert.throws(()=>applyPatches('changed upstream','client/desktop-host.mjs'),/expected 1 match/);
   assert.equal(applyPatches('untouched','client/other.mjs'),'untouched');
 });

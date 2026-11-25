@@ -33,3 +33,27 @@ test('R8 #5: Send has native disabled state, enables only for nonempty editor AN
 test('R8 #6: page-level Bật Yahoo appears only on supported logged-in page while off; draft/editor survive on/off',async()=>{
  const {dom,w,d}=await boot();let message;const stored={yzrEnabled:false};w.chrome.storage={local:{get:async()=>stored,set:async value=>Object.assign(stored,value)},onChanged:{addListener(){}}};w.chrome.runtime.onMessage={addListener:fn=>message=fn};const editor=d.querySelector('#richInput');editor.textContent='Nháp tiếng Việt chưa gửi';w.eval(await read('extension/content.js'));await new Promise(r=>setTimeout(r,0));const tab=d.querySelector('#yzr-controls'),button=tab.querySelector('button');assert.equal(button.textContent,'Bật YM!');assert.equal(tab.hidden,false);button.click();await new Promise(r=>setTimeout(r,0));assert.ok(d.documentElement.hasAttribute('data-yzr-active'));assert.equal(tab.hidden,true);assert.equal(d.querySelector('#richInput'),editor);assert.equal(editor.textContent,'Nháp tiếng Việt chưa gửi');await new Promise(resolve=>message({type:'yzr:set',enabled:false},{},resolve));assert.equal(tab.hidden,false);d.querySelector('#app-page').remove();await new Promise(r=>setTimeout(r,240));assert.equal(tab.hidden,true);assert.equal(d.querySelector('#richInput'),null);dom.window.close();
 });
+test('Pasted images: Zalo\'s tray (1 ảnh · Xoá tất cả) enables Send with no text and lets the composer grow',async()=>{
+ const {dom,w,d}=await boot(),skin=w.YahooZaloChrome({off(){}}),root=d.querySelector('#chatViewContainer'),nav=d.querySelector('#sidebarNav'),native=d.querySelector('#send');native.hidden=false;skin.sync(nav,root);
+ const send=root.querySelector('.yzr-sendbar .send');assert.equal(send.disabled,true);assert.ok(!root.hasAttribute('data-yzr-attachments'));
+ // Zalo 2026-11 (user DOM dump): the tray inside #chatInput, thumbnails as background images, and the
+ // editor locked (contenteditable=false) while it shows.
+ const tray=d.createElement('div');tray.className='chat-box-input__bottom';tray.innerHTML='<div class="input-preview-area"><div class="input-preview-area-header"><div class="input-preview-area-header__info"><span class="input-preview-area-header__count">1</span><span>ảnh</span></div><span class="input-preview-area-header__delete-all">Xoá tất cả</span></div><div class="input-preview-area__img-preview"><div class="image-preview-item" style="background-image:url(blob:https://chat.zalo.me/1)"></div></div></div>';
+ (d.querySelector('#chatInput')||d.querySelector('#chat-box-input-container-id')).append(tray);d.querySelector('#richInput').setAttribute('contenteditable','false');skin.sync(nav,root);
+ assert.ok(root.hasAttribute('data-yzr-attachments'),'the composer is marked to grow');
+ assert.equal(send.disabled,false,'Send works for the images alone');assert.notEqual(send.title,'Nhập tin nhắn để gửi');
+ const css=postcss.parse(await read('extension/skin.css'));let rule;css.walkRules(r=>{if(r.selectors.includes('html[data-yzr-active] [data-yzr-attachments] #chat-box-input-container-id'))rule=r;});
+ assert.ok(rule?.nodes.some(n=>n.prop==='height'&&n.value==='auto'&&n.important),'the fixed 75px height gives way');
+ let inner;css.walkRules(r=>{if(r.selectors.includes('html[data-yzr-active] [data-yzr-attachments] #chat-box-input-container-id #chatInput'))inner=r;});
+ assert.ok(inner?.nodes.some(n=>n.prop==='height'&&n.value==='auto'&&n.important),'#chatInput (which holds the tray) stops filling the composer');
+ native.remove();skin.sync(nav,root);assert.equal(send.disabled,true,'still needs a unique native Send');
+ d.body.append(native);tray.remove();skin.sync(nav,root);assert.ok(!root.hasAttribute('data-yzr-attachments'),'Xoá tất cả / sent: back to 75px');
+ skin.clear();assert.ok(!root.hasAttribute('data-yzr-attachments'));skin.dispose();dom.window.close();
+});
+test('The message under the pointer comes to the front, so its reaction button (hanging into the next message) stays reachable',async()=>{
+ const css=postcss.parse(await read('extension/skin.css'));let rule;
+ css.walkRules(r=>{if(r.selectors.includes('html[data-yzr-active] #messageViewScroll .chat-item:is(:hover,:focus-within)'))rule=r;});
+ assert.ok(rule?.nodes.some(n=>n.prop==='z-index'&&Number(n.value)>0&&n.important));
+ let hang;css.walkRules(r=>{if(r.selectors.includes('html[data-yzr-active] #messageViewScroll .chat-item .message-reaction-container'))hang=r;});
+ assert.ok(hang.nodes.some(n=>n.prop==='bottom'&&n.value==='-11px'),'the button still hangs below its message');
+});

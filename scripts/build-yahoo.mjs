@@ -82,19 +82,38 @@ export function rewriteLiterals(code,file){
 const PATCHES={
   'client/desktop-host.mjs':[
     {find:"import {createDesktop} from './desktop.mjs';",replace:()=>"import {createDesktop} from './desktop.mjs';import {ymDesktopCreated} from "+JSON.stringify(slash(path.join(src,'desktop-bridge.mjs')))+";",count:1},
-    {find:' return {winamp,desktop,internet,',replace:()=>' ymDesktopCreated(desktop);return {winamp,desktop,internet,',count:1}
+    {find:' return {winamp,desktop,internet,',replace:()=>' ymDesktopCreated(desktop);return {winamp,desktop,internet,',count:1},
+    // The plugin has its own Y! 360° window (src/yahoo/y360-window.mjs): Zalo's CSP frames the blog
+    // only through the extension page yahoo/y360.html. YM v2's window would register the same 'y360'.
+    {find:'const y360=createY360Desktop({desktop,notify});',replace:()=>'const y360={session(){},destroy(){}};',count:1}
   ],
   // My Y!360 goes through the Yahoo server's /360 (chat.ymvn.site), opened in the desktop's
   // Y! 360° window, not to the blog's own host.
-  'app/shell.ts':[
-    {find:'href="https://yahoo-360.racingisle5.chatgpt.site/api/connect/start?return=%2F360" target="_blank"',replace:()=>'href="/360" target="_blank"',count:2}
-  ],
   // Reader mode asks the Yahoo server, not the page it runs on (chat.zalo.me).
   'modules/internet-explorer/index.mjs':[
     {find:"win.fetch(options.endpoint||'/api/browser/read'",replace:()=>"YM_FETCH(options.endpoint||'/api/browser/read'",count:1}
   ],
-  // Push needs Yahoo's service worker, which cannot register on chat.zalo.me: say so plainly.
+  // The RTS game windows (StarCraft, Warcraft III…): Zalo's CSP frames vivalarts.com only through
+  // the extension page yahoo/game.html (src/yahoo/game-frame.mjs).
+  'modules/activities/vivalarts-window.mjs':[
+    {find:"const url='https://vivalarts.com/';",replace:()=>'import {ymGameFrame} from '+JSON.stringify(slash(path.join(src,'game-frame.mjs')))+";const url='https://vivalarts.com/';",count:1},
+    {find:'frame.src=url;screen.append(frame);',replace:()=>'screen.append(frame);ymGameFrame(frame,url);',count:1}
+  ],
+  // The install guide (video and steps) is for visitors of the YM v2 site: inside the plugin it is
+  // already installed, and the video is not packaged. Its desktop icon and sign-in link stay out.
+  'app/shell.ts':[
+    {find:'href="https://yahoo-360.racingisle5.chatgpt.site/api/connect/start?return=%2F360" target="_blank"',replace:()=>'href="/360" target="_blank"',count:2},
+    {find:'<button type="button" data-plugin-guide-open title="Cài Chrome extension để biến Zalo/FB/Telegram thành YM!"><img src="/icons/plugin-guide.svg" alt=""><span>Cài Chrome giao diện YM cho Zalo</span></button>',replace:()=>'',count:1},
+    {find:'<div class="login-links"><button type="button" class="login-link" data-plugin-guide-open>Hướng dẫn cài plugin Your Messenger</button></div>',replace:()=>'',count:1}
+  ],
+  // Give the combined list a stable link between its Y! rows and conversation windows.
+  'client/chat-windows.mjs':[
+    {find:"node.id=key;node.dataset.window=key;node.classList.add('conversation-window');",replace:()=>"node.id=key;node.dataset.window=key;node.dataset.ymChatKey=id;node.classList.add('conversation-window');",count:1}
+  ],
   'client/ym.js':[
+    {find:'const y360=boot.host?.y360||createY360Desktop({desktop,notify});',replace:()=>'const y360=boot.host?.y360||{session(){},destroy(){}};',count:1},
+    {find:"b.setAttribute('aria-label','Chat với '+p.nickname);b.innerHTML=",replace:()=>"b.setAttribute('aria-label','Chat với '+p.nickname);b.dataset.ymKey=p.id;b.innerHTML=",count:1},
+    // Push needs Yahoo's service worker, which cannot register on chat.zalo.me.
     {find:"popup('Thông báo','<p>Trình duyệt này chưa hỗ trợ thông báo web. Trên iPhone, dùng Safari với iOS 16.4 trở lên và thêm Y! vào Màn hình chính.</p>');",replace:()=>"popup('Thông báo','<p>Thông báo đẩy của Y! không chạy trong Your Messenger trên Zalo: trang Zalo không cho Y! đăng ký service worker.</p><p>Tin mới vẫn hiện trên desktop khi tab Zalo đang mở. Muốn nhận thông báo cả khi đóng tab, hãy bật trên trang YM v2 riêng.</p>');",count:1}
   ]
 };

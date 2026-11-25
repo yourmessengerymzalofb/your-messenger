@@ -9,7 +9,7 @@ export class Player{
     const vars=new URLSearchParams({enablejsapi:'1',origin:globalThis.location.origin,widgetid:String(counter)});
     for(const[k,v]of Object.entries(playerVars))if(k!=='origin'&&v!=null)vars.set(k,String(v));
     const frame=document.createElement('iframe');
-    frame.id=host.id||this.id;frame.width=width;frame.height=height;frame.allow='autoplay; encrypted-media; picture-in-picture';
+    frame.id=host.id||this.id;frame.width=width;frame.height=height;frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.allowFullscreen=true;
     frame.referrerPolicy='strict-origin-when-cross-origin';frame.title='YouTube video player';frame.setAttribute('frameborder','0');
     frame.src=ORIGIN+'/embed/'+encodeURIComponent(videoId||'')+'?'+vars;
     host.replaceWith(frame);this.frame=frame;

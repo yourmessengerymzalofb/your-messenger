@@ -168,15 +168,40 @@
     const hits=roster().filter(e=>e.key===key);
     if(hits.length!==1)return {ok:false,reason:'not-visible'};
     hits[0].link.click();
-    return await C.wait(()=>activeKey()===key,3000)?{ok:true}:{ok:false,reason:'not-opened'};
+    // Chrome slows a background tab's timers (to once a minute after a while), and Facebook moves to
+    // the chat on them: wait longer there. A failure says where it stopped.
+    if(await C.wait(()=>activeKey()===key,document.hidden?12000:3000))return {ok:true};
+    return {ok:false,reason:'not-opened',detail:(activeKey()?'Facebook vẫn ở hội thoại khác':'Facebook chưa chuyển sang hội thoại')+(document.hidden?'; tab Facebook đang chạy nền':'')};
   }
-  async function send(key,text){
-    if(!text)return {ok:false,reason:'empty'};
+  // A picture pasted in the Yahoo window, as a file for Facebook's composer.
+  function file(data,i){
+    const type=data.slice(5,data.indexOf(';')),bin=atob(data.slice(data.indexOf(',')+1)),bytes=new Uint8Array(bin.length);
+    for(let j=0;j<bin.length;j++)bytes[j]=bin.charCodeAt(j);
+    return new File([bytes],'yahoo-'+(i+1)+'.'+(type==='image/jpeg'?'jpg':type.slice(6)),{type});
+  }
+  // Facebook's own file input of this composer (behind its "Attach a file" button), as when the user
+  // picks files there; without exactly one, a paste into its editor.
+  function attach(root,files){
+    const ed=editor(root);if(!ed)return false;
+    const dt=new DataTransfer();for(const f of files)dt.items.add(f);
+    let box=ed.parentElement,inputs=[];
+    while(box&&root.contains(box)&&!inputs.length){inputs=[...box.querySelectorAll('input[type="file"]')].filter(n=>native(n)&&(!n.accept||/image/.test(n.accept)));box=box.parentElement;}
+    if(inputs.length===1&&(files.length===1||inputs[0].multiple)){
+      inputs[0].files=dt.files;
+      inputs[0].dispatchEvent(new Event('input',{bubbles:true}));inputs[0].dispatchEvent(new Event('change',{bubbles:true}));
+      return true;
+    }
+    ed.focus({preventScroll:true});
+    ed.dispatchEvent(new ClipboardEvent('paste',{clipboardData:dt,bubbles:true,cancelable:true}));
+    return true;
+  }
+  async function send(key,text,images=[]){
+    if(!text&&!images.length)return {ok:false,reason:'empty'};
     const root=main();
     if(detect()!=='ready'||!root||activeKey()!==key)return {ok:false,reason:'not-active'};
-    // Facebook swaps its Like button for "Press enter to send" only after the text is in, and a
-    // background tab renders slowly: wait longer before giving up.
-    return C.send({editor:editor(root),text,findSend:()=>A.resolve(root,'send'),press:n=>{n.click();return true;},settle:3000,findWait:3000,confirm:8000});
+    // Facebook swaps its Like button for "Press enter to send" only after the text (or a picture) is
+    // in, and a background tab renders slowly: wait longer before giving up.
+    return C.send({editor:editor(root),text,files:images.map(file),attach:files=>attach(root,files),findSend:()=>A.resolve(root,'send'),press:n=>{n.click();return true;},settle:3000,findWait:3000,confirm:images.length?30000:8000});
   }
   // The user's own picture from Facebook's account button (the "my avatar" of Yahoo windows).
   function profile(){

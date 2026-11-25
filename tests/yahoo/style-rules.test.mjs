@@ -19,3 +19,16 @@ test('Chat text can be selected and copied, even when the page underneath turns 
   assert.match(ROOT_CSS,/#ym-root \.messages \.message-line \*\{-webkit-user-select:text;user-select:text\}/);
   assert.match(ROOT_CSS,/a\.ym-chat-link\{[^}]*text-decoration:underline/);
 });
+
+test('Zalo, Facebook and Telegram chat text: 13px Arial like a YM message at its default size, names at 15px',async()=>{
+  const {readFile}=await import('node:fs/promises');
+  const {ROOT_CSS}=await import('../../src/yahoo/style.mjs');
+  const ym=await readFile(new URL('../../vendor/yahoo-v2/client/text-style.mjs',import.meta.url),'utf8');
+  assert.match(ym,/\?Number\(value\.size\):13,/,'YM default message size is 13px');
+  assert.match(ROOT_CSS,/#ym-root \.ym-source-chat \.messages \.message-body\{font:13px Arial,sans-serif\}/);
+  const skin=await readFile(new URL('../../extension/adapters/zalo/skin.css',import.meta.url),'utf8');
+  assert.match(skin,/#messageViewContainer\{[^}]*font:15px\/1\.55 Arial/,'the sender keeps the window size');
+  assert.match(skin,/#messageViewScroll \.card\{[^}]*font-size:13px;/);
+  assert.match(skin,/\.text-message__container:not\(\[style\*="font-size"\]\)\{font-size:13px!important;font-family:Arial,sans-serif!important\}/);
+  assert.match(skin,/\.text-message__container :not\(small\):not\(\[style\*="font-size"\]\)\{font-size:inherit!important\}/);
+});

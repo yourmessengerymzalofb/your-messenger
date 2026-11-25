@@ -276,3 +276,53 @@ test('Facebook Pages are told apart from people: encrypted or personal-id chats 
     assert.notEqual(group('Người Mới'),'Page','what was seen is kept');
   }finally{dom.window.close();}
 });
+
+test('Pictures from a Yahoo window go into Facebook\'s own file input; Send is pressed only once Facebook shows it',async()=>{
+  const {dom,w,d,hub}=await boot();
+  try{
+    installEditing(w);
+    // jsdom has no DataTransfer: a stand-in that keeps the files in order.
+    w.DataTransfer=class{constructor(){this.list=[];this.items={add:f=>this.list.push(f)};}get files(){return this.list;}};
+    const old=d.querySelector('[aria-label="Press Enter to send"]'),bar=old.parentElement;old.remove();
+    const input=d.createElement('input');input.type='file';input.accept='image/*,video/*';input.multiple=true;bar.append(input);
+    let given=null,sent=null;Object.defineProperty(input,'files',{set(v){given=v;},get(){return given;}});
+    // As Facebook: the picked picture shows in the composer and Send replaces Like; Send empties it.
+    input.addEventListener('change',()=>setTimeout(()=>{
+      const b=d.createElement('div');b.setAttribute('role','button');b.setAttribute('aria-label','Press enter to send');
+      b.addEventListener('click',()=>{sent={files:given.map(f=>[f.name,f.type,f.size]),text:d.querySelector('[role="textbox"]').textContent};d.querySelector('[role="textbox"]').textContent='';b.remove();});bar.append(b);
+    },100));
+    const png='data:image/png;base64,'+Buffer.from([137,80,78,71,13,10,26,10]).toString('base64');
+    const r=await hub.send('/messages/t/111','',[png]);
+    assert.equal(r.ok,true,r.reason);
+    same(sent,{files:[['yahoo-1.png','image/png',8]],text:''});
+    // With text too: the picture first, then the words, then one Send.
+    const r2=await hub.send('/messages/t/111','ảnh nè',[png]);
+    assert.equal(r2.ok,true,r2.reason);assert.equal(sent.text,'ảnh nè');
+  }finally{dom.window.close();}
+});
+
+test('Pictures are not sent when Facebook never shows them, or when its composer already holds something',async()=>{
+  const {dom,w,d,hub}=await boot();
+  try{
+    installEditing(w);
+    w.DataTransfer=class{constructor(){this.list=[];this.items={add:f=>this.list.push(f)};}get files(){return this.list;}};
+    const png='data:image/png;base64,'+Buffer.from([1,2,3]).toString('base64');
+    // Send already showing with an empty editor: an attachment waits there; refuse.
+    assert.equal((await hub.send('/messages/t/111','',[png])).reason,'draft-not-empty');
+    d.querySelector('[aria-label="Press Enter to send"]').remove();
+    const input=d.createElement('input');input.type='file';input.accept='image/*';d.querySelector('[aria-label="Thread composer"]').append(input);
+    Object.defineProperty(input,'files',{set(){},get(){return [];}});
+    const r=await hub.send('/messages/t/111','',[png]);
+    assert.equal(r.ok,false);assert.equal(r.reason,'attach-unconfirmed');
+  }finally{dom.window.close();}
+});
+
+test('Facebook open that does not take says where it stopped',async()=>{
+  const {dom,d,hub}=await boot();
+  try{
+    // A thread link Facebook ignores: the address stays on the chat already open.
+    const a=d.querySelector('a[href="/messages/t/222"]'),quiet=a.cloneNode(true);quiet.addEventListener('click',e=>e.preventDefault());a.replaceWith(quiet);
+    const r=await hub.open('/messages/t/222');
+    assert.equal(r.ok,false);assert.equal(r.reason,'not-opened');assert.match(r.detail,/vẫn ở hội thoại khác/);
+  }finally{dom.window.close();}
+});

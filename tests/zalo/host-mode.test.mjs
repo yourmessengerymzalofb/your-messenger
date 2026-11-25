@@ -72,6 +72,45 @@ test('Host mode list: five groups first, more on request; the strangers folder i
 // Zalo's filter bar as on chat.zalo.me (fake markup): tabs Ưu tiên / Khác, and the "Người lạ" chip
 // that opening the strangers folder turns on. The bar sits under the Yahoo desktop, out of reach.
 const FILTERS='<div class="msg-filters-bar"><div class="flx tab-main"><div class="tab-item selected"><div>Ưu tiên</div></div><div class="tab-item"><div>Khác</div></div><div class="flx-1"></div></div></div>';
+// As on chat.zalo.me (checked 2026-11-14, fake markup): "Tin nhắn từ người lạ" is a tick in the
+// "Phân loại" menu (a .popover-v3 on body). Ticked, the button becomes the "Người lạ" chip and Zalo
+// swaps the rows inside the same grid. A press on the list area closes the menu.
+const SORTED=FILTERS.replace('<div class="flx-1"></div>','<div class="flx-1"></div><div class="flx flx-al-c filter-preview-v2 label-filter-preview"><div class="flx"><div>Phân loại</div></div></div>');
+test("Host mode list: the strangers row turns on Zalo's Người lạ filter unseen, opens no chat, and the list follows",async()=>{
+  const row='<div class="msg-item" role="row" tabindex="0"><div class="gridv2 conv-item"><div><b>Tin nhắn từ người lạ</b><p>2 tin nhắn</p></div></div></div>';
+  const html=fixture.replace('<div class="filters">Ưu tiên　　Khác</div>',SORTED).replace('<div id="conversationList" role="grid"><div>','<div id="conversationList" role="grid"><div>'+row);
+  const {dom,w,d,slot,desktop}=await hosted(html);
+  try{
+    const button=d.querySelector('.label-filter-preview'),grid=d.getElementById('conversationList');let menu=null,quietWhileOpen=null,rowClicks=0;
+    grid.querySelector('.msg-item').addEventListener('mousedown',()=>rowClicks++);
+    button.addEventListener('click',()=>{menu=d.createElement('div');menu.className='popover-v3';
+      menu.innerHTML='<div class="zmenu-item --NORMAL md"><div class="truncate flx-1"><span>Bạn bè</span></div></div><div class="zmenu-item --NORMAL md"><div class="z-checkbox"></div><div class="truncate flx-1"><span>Tin nhắn từ người lạ</span></div></div>';
+      menu.querySelectorAll('.zmenu-item')[1].addEventListener('click',()=>{quietWhileOpen=d.documentElement.hasAttribute('data-yzr-quiet');
+        button.className='flx flx-al-c filter-preview-v2 m-shown mc-selected label-filter-preview';button.innerHTML='<div class="flx"><div>Người lạ</div></div><i class="fa fa-solid-close close"></i>';
+        button.querySelector('.close').addEventListener('click',()=>{button.className='flx flx-al-c filter-preview-v2 label-filter-preview';button.innerHTML='<div class="flx"><div>Phân loại</div></div>';grid.firstElementChild.innerHTML=before;});
+        grid.firstElementChild.innerHTML='<div class="msg-item" role="row" tabindex="0"><div class="gridv2 conv-item"><i>K</i><div><b>Khách Lạ</b><p>Chào bạn</p></div></div></div>';});
+      d.body.append(menu);});
+    d.getElementById('conversationListId').addEventListener('mousedown',()=>menu?.remove());
+    const before=grid.firstElementChild.innerHTML;
+    const names=()=>[...slot.querySelectorAll('.contact-row b')].map(b=>b.textContent);
+    assert.ok(names().includes('Tin nhắn từ người lạ')&&names().includes('Minh Anh'));
+    const tasks=desktop.querySelectorAll('.xp-task:not([hidden])').length;
+
+    await [...slot.querySelectorAll('.contact-row')].find(r=>r.querySelector('b').textContent==='Tin nhắn từ người lạ').onclick({type:'click',isTrusted:true});
+    assert.equal(quietWhileOpen,true,'the menu was hidden while used');
+    assert.equal(menu.isConnected,false,'the menu is closed again');
+    assert.equal(rowClicks,0,"Zalo's row itself is not clicked");
+    await wait(500);await wait(300);
+    assert.equal(d.documentElement.hasAttribute('data-yzr-quiet'),false);
+    assert.deepEqual(names(),['Khách Lạ'],'the list follows the filter in the same grid');
+    assert.equal(slot.querySelector('.yzr-filter-bar').firstChild.textContent,'Zalo đang lọc: Người lạ');
+    assert.equal(desktop.querySelectorAll('.xp-task:not([hidden])').length,tasks,'no chat window opens');
+
+    slot.querySelector('.yzr-filter-bar button').onclick({type:'click',isTrusted:true});await wait(500);await wait(300);
+    assert.ok(names().includes('Minh Anh'),'back to the full list');assert.ok(slot.querySelector('.yzr-filter-bar').hidden);
+  }finally{dom.window.close();}
+});
+
 test('Host mode list: a Zalo filter (Người lạ, Khác) shows a note with the way back to the full list',async()=>{
   const html=fixture.replace('<div class="filters">Ưu tiên　　Khác</div>',FILTERS);assert.notEqual(html,fixture);
   const {dom,d,slot}=await hosted(html);

@@ -35,21 +35,34 @@
     if(norm(editorText(editor))&&editor.hasAttribute('data-lexical-editor'))
       editor.dispatchEvent(new (doc.defaultView.InputEvent)('beforeinput',{inputType:'deleteContentBackward',bubbles:true,cancelable:true}));
   }
-  async function send({editor,findSend,press,text,settle=1000,findWait=0,confirm=3000}){
+  // files: pictures pasted in a Yahoo window. attach(files) hands them to the page's own composer,
+  // which then shows its Send control; nothing is sent unless that appears. Pictures left in the
+  // page's composer after a failure stay there for the user to see (reason attach-unconfirmed).
+  async function send({editor,findSend,press,text='',files=[],attach,attachWait=15000,settle=1000,findWait=0,confirm=3000}){
     if(!editor?.isConnected)return {ok:false,reason:'no-editor'};
     if(norm(editorText(editor)))return {ok:false,reason:'draft-not-empty'};
-    const doc=editor.ownerDocument;
-    caretToEnd(editor);
-    // Native editing commands go through the page editor's own input pipeline.
-    text.split('\n').forEach((line,i)=>{if(i)doc.execCommand('insertLineBreak');if(line)doc.execCommand('insertText',false,line);});
-    if(!await wait(()=>norm(editorText(editor))===norm(text),settle)){clear(editor);return {ok:false,reason:'editor-mismatch'};}
+    const doc=editor.ownerDocument,pictures=files.length>0,failed=pictures?'attach-unconfirmed':'no-send';
+    if(pictures){
+      // A Send control already showing means something waits in the composer (a picture, a file).
+      if(findSend())return {ok:false,reason:'draft-not-empty'};
+      let attached=false;try{attached=!!attach&&await attach(files);}catch{}
+      if(!attached)return {ok:false,reason:'attach-failed'};
+      if(!await wait(()=>findSend(),attachWait))return {ok:false,reason:'attach-unconfirmed'};
+    }
+    if(text){
+      caretToEnd(editor);
+      // Native editing commands go through the page editor's own input pipeline.
+      text.split('\n').forEach((line,i)=>{if(i)doc.execCommand('insertLineBreak');if(line)doc.execCommand('insertText',false,line);});
+      if(!await wait(()=>norm(editorText(editor))===norm(text),settle)){clear(editor);return {ok:false,reason:pictures?failed:'editor-mismatch'};}
+    }
     // Some pages draw their Send control only once the editor has text.
     if(findWait)await wait(()=>findSend(),findWait);
     const button=findSend();
-    if(!button){clear(editor);return {ok:false,reason:'no-send'};}
-    if(!press(button)){clear(editor);return {ok:false,reason:'no-send'};}
-    // Never resend: an unconfirmed send is reported, not retried.
-    return await wait(()=>!editor.isConnected||!norm(editorText(editor)),confirm)?{ok:true,reason:''}:{ok:false,reason:'unconfirmed'};
+    if(!button){clear(editor);return {ok:false,reason:failed};}
+    if(!press(button)){clear(editor);return {ok:false,reason:failed};}
+    // Never resend: an unconfirmed send is reported, not retried. With pictures the page also swaps
+    // its Send control back once they have gone.
+    return await wait(()=>(!editor.isConnected||!norm(editorText(editor)))&&(!pictures||!findSend()),confirm)?{ok:true,reason:''}:{ok:false,reason:'unconfirmed'};
   }
   globalThis.YahooHubCompose={send,wait,norm,editorText};
 })();

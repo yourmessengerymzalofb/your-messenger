@@ -38,8 +38,11 @@
   function nativeFilter(){const bar=navRoot?.querySelector('.msg-filters-bar');if(!bar)return null;const chip=bar.querySelector('.filter-preview-v2.mc-selected,.label-filter-prev'),tabs=[...bar.querySelectorAll('.tab-item')];if(chip)return {label:chip.textContent.trim()||'bộ lọc',reset:chip.querySelector('.close')||tabs[0]};const on=tabs.find(t=>t.classList.contains('selected'));return on&&on!==tabs[0]?{label:on.textContent.trim(),reset:tabs[0]}:null;}
   function showFilter(){if(!filterBar)return;const f=nativeFilter();filterBar.hidden=!f;filterText.textContent=f?'Zalo đang lọc: '+f.label:'';}
   function gridOf(nav){const root=nav?.querySelector('#conversationList'),grids=root?.querySelectorAll('.ReactVirtualized__Grid');return root?.matches('.ReactVirtualized__Grid')?root:grids?.length===1?grids[0]:root;}
-  // A filter change may render a new native grid: follow it at once instead of reading the old one.
-  function filterChanged(){showFilter();if(!navRoot||!slotRoot)return;const grid=gridOf(navRoot);if(grid&&grid!==source)sync(navRoot,slotRoot);else refresh();}
+  // A filter change swaps the rows (on chat.zalo.me inside the same grid) or renders a new grid:
+  // either way the list is read again from the top instead of merging with the old rows.
+  let filterKey=null;
+  function filterChanged(){showFilter();if(!navRoot||!slotRoot)return;const f=nativeFilter(),key=f?f.label:'',grid=gridOf(navRoot);
+   if(grid&&grid!==source||filterKey!==null&&key!==filterKey){const nav=navRoot,slot=slotRoot;clear();sync(nav,slot);}else refresh();}
   const plain=n=>n.name.normalize('NFC').replace(/\s+/g,' ').trim();
   const isCloud=n=>/^(my documents|cloud của tôi)$/i.test(plain(n));
   // Zalo's folder of messages from strangers is not a friend: list it last, with its own icon.
@@ -93,7 +96,24 @@
   function queueScan(limit){const epoch=version;requested=limit;job=job.catch(()=>{}).then(()=>scan(limit,epoch));return job;}
   function findLive(item){return [...source.querySelectorAll('.msg-item')].filter(n=>rowName(n)===item.name&&rowAvatar(n)===item.src);}
   async function locate(item,epoch){if(!live(epoch)||!(await move(item.index*rowHeight,epoch)).alive)return null;const matches=findLive(item),rendered=entries();return matches.length===1&&rendered.filter(i=>identity(i)===identity(item)&&i.index===item.index).length===1?matches[0]:null;}
-  function open(item,event){if(event?.isTrusted!==true||event.type!=='click'||busy)return Promise.resolve(false);notice('');if(item.cloud){const ok=cloudControl&&YahooZaloActions.activate(cloudControl,event);if(ok)onChoose(item.name,'Friends');return Promise.resolve(!!ok);}if(item.ambiguous||cache.filter(n=>identity(n)===identity(item)).length!==1){notice('Không mở được: có nhiều hội thoại trùng tên và avatar. Hãy dùng tìm kiếm Zalo.');return Promise.resolve(false);}
+  // "Tin nhắn từ người lạ" is not a chat. On chat.zalo.me it is a tick in Zalo's "Phân loại" menu
+  // (chip "Người lạ"), so this turns that on: the menu opens unseen (html[data-yzr-quiet], skin.css),
+  // the tick is clicked, the menu closes. No chat window opens; the list follows the filter.
+  async function strangersFilter(event){
+   const sleep=ms=>new Promise(r=>setTimeout(r,ms)),button=navRoot?.querySelector('.msg-filters-bar .label-filter-preview');if(!button)return false;
+   if(button.classList.contains('mc-selected')&&/người lạ/i.test(button.textContent.normalize('NFC')))return true;
+   const html=document.documentElement,pick=()=>[...document.querySelectorAll('.popover-v3 .zmenu-item')].find(n=>/tin nhắn từ người lạ/i.test(n.textContent.normalize('NFC')));
+   html.setAttribute('data-yzr-quiet','');
+   try{
+    if(!YahooZaloActions.activate(button,event))return false;
+    let tick=null;for(let i=0;i<20&&!(tick=pick());i++)await sleep(50);
+    const ok=!!tick&&YahooZaloActions.activate(tick,event);await sleep(150);
+    // Zalo closes the menu on a press outside it: the list area.
+    const away=navRoot?.querySelector('#conversationListId');if(away&&document.querySelector('.popover-v3 .zmenu-item'))YahooZaloActions.activate(away,event);
+    return ok;
+   }finally{setTimeout(()=>html.removeAttribute('data-yzr-quiet'),200);}
+  }
+  function open(item,event){if(event?.isTrusted!==true||event.type!=='click'||busy)return Promise.resolve(false);notice('');if(isStrangers(item))return strangersFilter(event).then(ok=>{if(ok)setTimeout(filterChanged,300);else notice('Không bật được bộ lọc Người lạ của Zalo (Phân loại → Tin nhắn từ người lạ).');return ok;});if(item.cloud){const ok=cloudControl&&YahooZaloActions.activate(cloudControl,event);if(ok)onChoose(item.name,'Friends');return Promise.resolve(!!ok);}if(item.ambiguous||cache.filter(n=>identity(n)===identity(item)).length!==1){notice('Không mở được: có nhiều hội thoại trùng tên và avatar. Hãy dùng tìm kiếm Zalo.');return Promise.resolve(false);}
    // Fast path for an already-rendered row; still validate its cached index.
    const matches=findLive(item),current=entries().filter(i=>identity(i)===identity(item)&&i.index===item.index);if(matches.length===1&&current.length===1){const ok=YahooZaloActions.activateRow(matches[0],event);if(ok)onChoose(item.name,item.group);return Promise.resolve(ok);}
    const epoch=version,saved=source.scrollTop;busy=true;paint();job=(async()=>{try{let target=await locate(item,epoch);if(!target&&live(epoch)){busy=false;await scan(requested,epoch);busy=true;const updated=cache.filter(n=>identity(n)===identity(item));if(updated.length===1&&!updated[0].ambiguous){item=updated[0];target=await locate(item,epoch);}}
@@ -126,7 +146,7 @@
     filterBar=document.createElement('div');filterBar.className='yzr-filter-bar';filterBar.hidden=true;filterBar.setAttribute('role','status');filterText=document.createElement('span');const back=document.createElement('button');back.type='button';back.className='classic-button';back.textContent='← Về danh sách chính';
     back.onclick=e=>{const f=nativeFilter();if(e?.isTrusted!==true||!f?.reset)return;if(YahooZaloActions.activate(f.reset,e))setTimeout(filterChanged,300);};
     filterBar.append(filterText,back);view.prepend(filterBar);
-    const filters=nav.querySelector('.msg-filters-bar');if(filters){filterWatch=new MutationObserver(filterChanged);filterWatch.observe(filters,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});}slot.append(view);source.setAttribute('data-yzr-group-source','hidden');sizeGrid();cloudControl=YahooZaloActions.resolve(nav,'myDocuments');cloud=cloudControl?{index:-1,name:'My Documents',src:cloudControl.querySelector('img[src]')?.getAttribute('src')||'',group:'Friends',unread:false,previewTime:'',cloud:true}:null;cache=entries().slice(0,30);paint();
+    const filters=nav.querySelector('.msg-filters-bar');if(filters){filterWatch=new MutationObserver(filterChanged);filterWatch.observe(filters,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});}filterKey=nativeFilter()?.label||'';slot.append(view);source.setAttribute('data-yzr-group-source','hidden');sizeGrid();cloudControl=YahooZaloActions.resolve(nav,'myDocuments');cloud=cloudControl?{index:-1,name:'My Documents',src:cloudControl.querySelector('img[src]')?.getAttribute('src')||'',group:'Friends',unread:false,previewTime:'',cloud:true}:null;cache=entries().slice(0,30);paint();
     observer=new MutationObserver(refresh);observer.observe(source,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','src','aria-label','title']});if(typeof ResizeObserver==='function'){resizeObserver=new ResizeObserver(sizeGrid);resizeObserver.observe(gridParent());}
     // Defer until Yahoo's slot/AutoSizer ancestors are laid out. No native click.
     const epoch=version;job=Promise.resolve().then(()=>scan(30,epoch));

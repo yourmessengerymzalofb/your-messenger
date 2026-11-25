@@ -1,13 +1,31 @@
 {
- "version": "2026-11-04",
+ "version": "2026-11-09",
  "title": "Your Messenger — Điều khoản sử dụng",
  "intro": "Chào bạn! Trước khi dùng, vui lòng đọc vài điều sau:",
  "points": [
-  ["Sản phẩm hoài niệm, phi thương mại.", "Your Messenger là dự án làm vì hoài niệm YM! cổ điển: miễn phí, không quảng cáo, không thu tiền, không có mục đích thương mại."],
-  ["Lưu hành nội bộ nhóm Codex VN.", "Bản thử nghiệm chỉ dành cho thành viên nhóm Codex VN. Vui lòng không chia sẻ tệp cài đặt ra ngoài nhóm, và chỉ cài từ kênh chính thức của nhóm."],
-  ["Không liên kết với Yahoo, Zalo (VNG) hay Meta.", "Tên, logo, âm thanh và hình ảnh Yahoo thuộc về chủ sở hữu. Phần nào bị chủ sở hữu yêu cầu sẽ được gỡ ngay."],
-  ["Dữ liệu của bạn ở lại trong máy.", "Plugin chỉ đọc nội dung đang hiện trên Zalo Web và Facebook để vẽ lại giao diện, ngay trong trình duyệt. Plugin không gửi nội dung Zalo hay Facebook đi đâu, không hỏi và không đọc mật khẩu Zalo hay Facebook. Mạng chỉ dùng để nối với máy chủ YM v2 cho các tính năng Y!."],
-  ["Không tự thao tác.", "Mọi thao tác trên Zalo và Facebook chỉ chạy khi chính bạn bấm. Plugin không tự gửi tin, không tự kết bạn."],
-  ["Bản thử nghiệm, bạn tự chịu trách nhiệm khi dùng.", "Plugin có thể có lỗi hoặc tạm ngừng chạy khi Zalo, Facebook đổi giao diện. Bạn vẫn phải tuân thủ điều khoản của Zalo và Facebook. Khi cần, bấm nút Zalo ở khay để về giao diện gốc, hoặc gỡ plugin."]
+  [
+   "Sản phẩm hoài niệm, phi thương mại.",
+   "Your Messenger là dự án làm vì hoài niệm YM! cổ điển: miễn phí, không quảng cáo, không thu tiền, không có mục đích thương mại."
+  ],
+  [
+   "Lưu hành nội bộ nhóm Codex VN.",
+   "Bản thử nghiệm chỉ dành cho thành viên nhóm Codex VN. Vui lòng không chia sẻ tệp cài đặt ra ngoài nhóm, và chỉ cài từ kênh chính thức của nhóm."
+  ],
+  [
+   "Không liên kết với Yahoo, Zalo (VNG), Meta hay Telegram.",
+   "Tên, logo, âm thanh và hình ảnh Yahoo thuộc về chủ sở hữu. Phần nào bị chủ sở hữu yêu cầu sẽ được gỡ ngay."
+  ],
+  [
+   "Dữ liệu của bạn ở lại trong máy.",
+   "Plugin chỉ đọc nội dung đang hiện trên Zalo Web, Facebook và Telegram Web để vẽ lại giao diện, ngay trong trình duyệt. Plugin không gửi nội dung Zalo, Facebook hay Telegram đi đâu, không hỏi và không đọc mật khẩu Zalo hay Facebook. Mạng chỉ dùng để nối với máy chủ YM v2 cho các tính năng Y!."
+  ],
+  [
+   "Không tự thao tác.",
+   "Mọi thao tác trên Zalo, Facebook và Telegram chỉ chạy khi chính bạn bấm. Plugin không tự gửi tin, không tự kết bạn."
+  ],
+  [
+   "Bản thử nghiệm, bạn tự chịu trách nhiệm khi dùng.",
+   "Plugin có thể có lỗi hoặc tạm ngừng chạy khi Zalo, Facebook, Telegram đổi giao diện. Bạn vẫn phải tuân thủ điều khoản của Zalo, Facebook và Telegram. Khi cần, bấm nút Zalo ở khay để về giao diện gốc, hoặc gỡ plugin."
+  ]
  ]
 }

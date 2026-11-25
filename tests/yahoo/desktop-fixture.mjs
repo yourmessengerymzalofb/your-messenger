@@ -11,8 +11,8 @@ for(const name of ['setTimeout','setInterval']){const real=globalThis[name];glob
 // Runs the built desktop (extension/yahoo/app, made by `npm run build`) on a fake Zalo page.
 // The fake proxy answers like a signed-out YM v2 server; no network is used. Like chat.zalo.me,
 // the page has its own #contact-search (a div), ahead of Yahoo's search box in the document.
-// stored: chrome.storage.local at start (e.g. {ymBuddyLayout:'separate'}); the automatic guest Y! ID is off
-// unless a test turns it on (ymAutoGuest:true).
+// stored: chrome.storage.local at start (e.g. {ymBuddyLayout:'separate'}); the automatic guest Y! ID (on by default
+// in the plugin) is off here unless a test asks for it (ymAutoGuest:true, or undefined for the default).
 // routes(message): a reply for other proxy calls ({status,body}), or nothing for 404.
 // signedIn:false: Zalo's page without its signed-in screen (no conversation list yet); boot is not awaited.
 export async function zaloWithDesktop({account={authenticated:false},hub=false,stored:seed={},routes=()=>null,signedIn=true}={}){

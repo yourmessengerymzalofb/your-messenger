@@ -29,7 +29,7 @@
     async function run(m){
       const requestId=P.requestId(m.requestId);if(!requestId)return;
       busy++;let reply;
-      try{reply=m.type==='open'?await adapter.open(m.key):m.type==='call'?(adapter.call&&P.CALLS.includes(m.media)?await adapter.call(m.key,m.media):{ok:false,reason:'no-call'}):m.type==='compose'?(adapter.compose?await adapter.compose():{ok:false,reason:'no-compose'}):m.type==='info'?(adapter.info?await adapter.info(m.key):{ok:false,reason:'no-info'}):await adapter.send(m.key,P.outgoing(m.text));}
+      try{reply=m.type==='open'?await adapter.open(m.key):m.type==='call'?(adapter.call&&P.CALLS.includes(m.media)?await adapter.call(m.key,m.media):{ok:false,reason:'no-call'}):m.type==='compose'?(adapter.compose?await adapter.compose():{ok:false,reason:'no-compose'}):m.type==='info'?(adapter.info?await adapter.info(m.key):{ok:false,reason:'no-info'}):m.type==='more'?(adapter.more?await adapter.more():{ok:false,reason:'end'}):await adapter.send(m.key,P.outgoing(m.text),P.uploads(m.images));}
       catch{reply={ok:false,reason:'adapter-error'};}
       finally{busy--;}
       try{port?.postMessage({type:m.type+'Result',requestId,...P.result(reply)});}catch{}
@@ -40,7 +40,7 @@
       try{port=runtime().connect({name:P.PORT_SOURCE+adapter.id});}catch{port=null;return;}
       last='';
       port.onMessage.addListener(m=>{
-        if(['open','send','call','compose','info'].includes(m?.type))run(m);
+        if(['open','send','call','compose','info','more'].includes(m?.type))run(m);
         else if(m?.type==='resync')publish(true);
       });
       port.onDisconnect.addListener(()=>{

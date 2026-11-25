@@ -4,8 +4,12 @@
 (() => {
   const hubOrigins=['https://chat.zalo.me'];
   const sources=[
-    {id:'facebook',label:'Facebook',openUrl:'https://www.facebook.com/messages/',groups:['Online','Offline','Group','Chưa rõ trạng thái','Page'],
-     match:u=>/^https:\/\/(?:www\.|web\.)?facebook\.com$/.test(u.origin)&&u.pathname.startsWith('/messages')}
+    // uploads: the adapter attaches pictures pasted in a Yahoo chat window to its own composer.
+    {id:'facebook',label:'Facebook',openUrl:'https://www.facebook.com/messages/',groups:['Online','Offline','Group','Chưa rõ trạng thái','Page'],uploads:true,
+     match:u=>/^https:\/\/(?:www\.|web\.)?facebook\.com$/.test(u.origin)&&u.pathname.startsWith('/messages')},
+    // Telegram Web A only (web.telegram.org/a/); version K (/k/) is another page.
+    {id:'telegram',label:'Telegram',openUrl:'https://web.telegram.org/a/',groups:['Online','Bạn bè','Nhóm','Bot'],
+     match:u=>u.origin==='https://web.telegram.org'&&u.pathname.startsWith('/a/')}
   ];
   const parse=url=>{try{return new URL(url);}catch{return null;}};
   function sourceForUrl(url){const u=parse(url);return u?sources.find(s=>s.match(u))||null:null;}

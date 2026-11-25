@@ -20,7 +20,9 @@ test('Source CSS and bundled icons/wallpaper/sounds keep snapshot hashes',async(
  for(const[name,hash]of Object.entries(p.css))assert.equal(createHash('sha256').update(await readFile(new URL('reference/v2/'+name,root))).digest('hex'),hash);
  // Left out of Your Messenger on purpose: nothing in the skin uses them (0.3 release clean-up).
  const removed=new Set(['assets/buzz.wav','assets/door.wav','assets/type.wav','icons/app.svg','icons/audible.svg','icons/group.svg']);
- for(const[name,hash]of Object.entries(p.assets))if(!removed.has(name))assert.equal(createHash('sha256').update(await readFile(R('extension/'+name))).digest('hex'),hash);
+ // The snapshot hashed text assets with CRLF line ends; the files are stored with LF, so an SVG may match either form.
+ const sha=b=>createHash('sha256').update(b).digest('hex'),crlf=b=>Buffer.from(b.toString('latin1').replace(/\r?\n/g,'\r\n'),'latin1');
+ for(const[name,hash]of Object.entries(p.assets))if(!removed.has(name)){const b=await readFile(R('extension/'+name));assert.ok(sha(b)===hash||name.endsWith('.svg')&&sha(crlf(b))===hash,name);}
 });
 async function boot(html='<section id="panel"><header id="bar"></header><div id="chat-box-input-container-id"><button title="Gửi" id="native">Send</button></div></section>',width=1366,height=768){const dom=new JSDOM(html,{runScripts:'outside-only',url:'https://chat.zalo.me/'}),w=dom.window;Object.defineProperty(w,'innerWidth',{value:width,writable:true});Object.defineProperty(w,'innerHeight',{value:height,writable:true});for(const file of ['windows.js','actions.js','buddies.js'])w.eval(await read('extension/'+file));return {dom,w,root:w.document.querySelector('#panel')};}
 function pointer(w,target,type,x,y){const e=new w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:x,clientY:y});Object.defineProperty(e,'pointerId',{value:1});target.dispatchEvent(e);}

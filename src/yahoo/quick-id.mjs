@@ -6,10 +6,11 @@
    The password stays in chrome.storage.local (key ymQuickId), never in Zalo's page storage; it is
    shown once to copy and signs the user in again when the session ends. Nothing from Zalo or
    Facebook is used for the nick.
-   Guest ID: with no saved ID, the plugin makes one by itself on first sign-out view (guest_ and six
-   digits), so BUZZ, games and Y! friends work at once. Off unless chrome.storage.local ymAutoGuest is true:
-   the user chose a one-click ID over a silent one, and a silent one would also take over the session of
-   someone who already has an ID (a remembered nick in Yahoo's form) whose session simply ended.
+   Guest ID: signed out with no saved ID (a first load of the plugin, say), the plugin makes one by
+   itself (guest_ and six digits) and signs in, so BUZZ, games and Y! friends work at once. On by
+   default (chrome.storage.local ymAutoGuest false turns it off). Never for a browser that already has
+   an ID (a remembered nick in Yahoo's form, whose session simply ended), nor after Đăng xuất of a
+   saved one: those keep Yahoo's sign-in and the quick button.
    Renaming it needs a nickname-change API on the YM v2 server, which does not exist yet. */
 import {ymFetch} from './net.mjs';
 export const QUICK_KEY='ymQuickId';
@@ -31,7 +32,7 @@ export function startQuickId(root,{store=globalThis.chrome?.storage?.local,rand=
   const read=async()=>{try{return (await store.get({[KEY]:null}))?.[KEY]||null;}catch{return null;}};
   const save=v=>{try{return store.set({[KEY]:v});}catch{}};
   const signedIn=()=>root.classList.contains('xp-signed-in');
-  const autoOn=async()=>{try{return (await store.get({ymAutoGuest:false}))?.ymAutoGuest===true;}catch{return false;}};
+  const autoOn=async()=>{try{return (await store.get({ymAutoGuest:true}))?.ymAutoGuest!==false;}catch{return false;}};
   // Yahoo's form shows the remembered nick: this browser already has an ID.
   const hasId=()=>!!$('#auth-nick')?.value.trim();
   const loginShown=()=>!signedIn()&&boot.hidden&&(screen.dataset.mode||'login')==='login';
@@ -161,7 +162,7 @@ export function startQuickId(root,{store=globalThis.chrome?.storage?.local,rand=
     card.hidden=!!saved?.password;quick.hidden=!saved?.password;if(saved)quick.textContent='Đăng nhập nhanh: '+saved.nickname;
     if(first){first=false;
       if(saved?.password&&!saved.out)void signIn(saved);
-      // No ID yet, none half-made and no remembered nick: the guest ID, only when turned on.
+      // No ID yet, none half-made and no remembered nick: the guest ID (unless turned off).
       else if(!saved&&!hasId()&&await autoOn()&&!signedIn()&&loginShown()&&!busy)void autoGuest();}
   }
   const watch=new MutationObserver(()=>void update());

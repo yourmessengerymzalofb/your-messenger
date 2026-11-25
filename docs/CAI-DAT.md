@@ -1,6 +1,6 @@
-# Cài Your Messenger – Giao diện cổ điển cho Zalo Web & Facebook (bản beta)
+# Cài Your Messenger – Giao diện cổ điển cho Zalo Web, Facebook & Telegram (bản beta)
 
-Your Messenger hiển thị Zalo Web và Facebook Messages trong giao diện phong cách YM!, gom chung một danh sách bạn. Dự án hoài niệm phi thương mại, không liên kết với Yahoo, Zalo hay Meta.
+Your Messenger hiển thị Zalo Web, Facebook Messages và Telegram Web trong giao diện phong cách YM!, gom chung một danh sách bạn. Dự án hoài niệm phi thương mại, không liên kết với Yahoo, Zalo, Meta hay Telegram.
 
 Dùng trên **máy tính**, trình duyệt **Chrome** (hoặc Edge, Cốc Cốc, Brave). Chưa có bản điện thoại.
 
@@ -11,23 +11,24 @@ Bạn nhận được `Your-Messenger-<phiên bản>.zip` và mã SHA-256 của 
 **Windows:** mở PowerShell trong thư mục chứa tệp zip rồi chạy:
 
 ```
-Get-FileHash .\Your-Messenger-0.3.0.zip -Algorithm SHA256
+Get-FileHash .\Your-Messenger-0.4.0.zip -Algorithm SHA256
 ```
 
 **macOS:** mở Terminal trong thư mục chứa tệp zip rồi chạy:
 
 ```
-shasum -a 256 Your-Messenger-0.3.0.zip
+shasum -a 256 Your-Messenger-0.4.0.zip
 ```
 
 Mã hiện ra phải trùng với mã được công bố. Nếu khác thì đừng cài.
 
-## 2. Đăng nhập Zalo Web và Facebook trước
+## 2. Đăng nhập Zalo Web, Facebook và Telegram trước
 
 1. Mở `https://chat.zalo.me` và đăng nhập như bình thường (quét QR hoặc mật khẩu).
 2. Mở `https://www.facebook.com/messages` và đăng nhập.
+3. (Nếu dùng Telegram) mở `https://web.telegram.org/a/` và đăng nhập. Dùng bản **A**; bản K chưa hỗ trợ.
 
-Plugin không hỏi và không thấy mật khẩu Zalo hay Facebook. Đăng nhập trước khi cài là cách để bạn yên tâm điều đó.
+Plugin không hỏi và không thấy mật khẩu Zalo, Facebook hay Telegram. Đăng nhập trước khi cài là cách để bạn yên tâm điều đó.
 
 ## 3. Cài plugin
 
@@ -42,21 +43,22 @@ Plugin không hỏi và không thấy mật khẩu Zalo hay Facebook. Đăng nh�
 ## 4. Dùng
 
 1. Quay lại tab Zalo và bấm **F5**. Desktop Y! hiện ra với cửa sổ **YM!**.
-2. Các tab **Tất cả / Y! / Zalo / Facebook** nằm trong cửa sổ. Zalo và Facebook dùng được ngay, chưa cần Y! ID.
-3. Facebook cần một tab `facebook.com/messages` để mở (nên ghim tab đó).
+2. Các tab **Tất cả / Y! / Zalo / Facebook / Telegram** nằm trong cửa sổ. Zalo, Facebook và Telegram dùng được ngay, chưa cần Y! ID.
+3. Facebook cần một tab `facebook.com/messages` mở sẵn, Telegram cần một tab `web.telegram.org/a/` (nên ghim các tab đó).
 4. Muốn BUZZ!!!, chơi game, chat với bạn Y!: vào tab **Y!**, bấm **Tạo Y! ID** (1 bấm), hoặc **Đã có Y! ID? Đăng nhập**.
    - Mật khẩu Y! ID do plugin tạo hiện một lần để bạn chép. Xem lại được trong popup của plugin.
 5. Muốn về giao diện Zalo gốc: bấm nút **Zalo** ở góc phải thanh taskbar. Bấm nút tròn **Y!** ở mép phải màn hình để quay lại.
 
-Các lựa chọn khác nằm trong popup (bấm biểu tượng plugin):
-- gom chung hoặc 3 cửa sổ riêng;
-- ẩn Zalo hoặc Facebook khỏi danh sách;
-- tắt desktop.
+Các lựa chọn khác nằm trong popup (bấm biểu tượng plugin), chọn xong bấm **Lưu**: plugin lưu và tự tải lại tab Zalo.
+- tắt hoặc bật YM! trên Zalo Web;
+- một cửa sổ YM! cho mọi app, hoặc mỗi app một cửa sổ riêng.
 
-## 5. Khi Zalo hoặc Facebook đòi đăng nhập lại
+App nào hiện trong **Tất cả** thì bấm nút **Tất cả ▾** trong cửa sổ YM! để chọn.
+
+## 5. Khi Zalo, Facebook hoặc Telegram đòi đăng nhập lại
 
 1. Tắt Your Messenger ở `chrome://extensions`.
-2. Đăng nhập lại Zalo hoặc Facebook.
+2. Đăng nhập lại app đó.
 3. Bật plugin, rồi F5 tab Zalo.
 
 ## 6. Cập nhật lên bản mới
@@ -69,7 +71,7 @@ Bản cài thủ công không tự cập nhật.
 
 ## 7. Gỡ
 
-Ở `chrome://extensions`, bấm **Xóa** ở Your Messenger, rồi xóa thư mục. Zalo và Facebook trở về như cũ.
+Ở `chrome://extensions`, bấm **Xóa** ở Your Messenger, rồi xóa thư mục. Zalo, Facebook và Telegram trở về như cũ.
 
 ## Báo lỗi
 

@@ -7,7 +7,7 @@
     "build": "node scripts/build-yahoo.mjs",
     "test": "node scripts/build-yahoo.mjs && node --test tests/*/*.test.mjs",
     "package": "node scripts/build-yahoo.mjs --minify && node scripts/package.mjs",
-    "vendor": "node scripts/vendor-yahoo.mjs ../game-spectators-release-20261027",
+    "vendor": "node scripts/vendor-yahoo.mjs",
     "publish": "node scripts/publish-github.mjs"
   },
   "devDependencies": {

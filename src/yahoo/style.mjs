@@ -65,12 +65,13 @@ export const ROOT_CSS=`
 #ym-root :is(.ym-channel-window,.ym-channel-source) .yzr-avatar-icon[data-yzr-icon=cloud]::before{content:'☁'}
 #ym-root :is(.ym-channel-window,.ym-channel-source) .yzr-avatar-icon[data-yzr-icon=strangers]::before{content:'✉'}
 #ym-root :is(.ym-channel-window,.ym-channel-source) .yzr-avatar-icon[data-yzr-icon=person]::before{content:'☺'}
-#ym-root :is(.ym-channel-window,.ym-channel-source) .yzr-more-groups{display:block;margin:3px auto 6px;padding:1px 10px;font-size:11px}
+#ym-root :is(.ym-channel-window,.ym-channel-source) :is(.yzr-more-groups,.ym-more){display:block;margin:3px auto 6px;padding:1px 10px;font-size:11px}
 /* Zalo's own filter (e.g. "Người lạ") is on: a note with the way back to the full list. */
 #ym-root .yzr-filter-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:4px 6px;padding:4px 6px;border:1px solid #e4d79a;border-radius:3px;background:#fff8d8;color:#5d4a00;font:11px Tahoma,sans-serif}
 #ym-root .yzr-filter-bar[hidden]{display:none}
 #ym-root .yzr-filter-bar button{padding:1px 8px;font-size:11px}
 #ym-root :is(.ym-facebook-window,.ym-src-facebook) .tiny-avatar::after{content:'f';background:#1b3f8f}
+#ym-root :is(.ym-telegram-window,.ym-src-telegram) .tiny-avatar::after{content:'➤';background:#2aabee;font-size:7px}
 /* Zalo: Zalo blue with a light-blue menu; Facebook: dark blue. Yahoo stays purple. */
 #ym-root .ym-zalo-window{--title1:#cfe4ff;--title2:#0068ff;--title3:#62a6ff;border-color:#5b8fd6}
 #ym-root .ym-zalo-window>.titlebar{background:linear-gradient(var(--title1),var(--title2) 48%,#2f86ff 72%,var(--title3));border-top-color:#e3efff}
@@ -85,6 +86,13 @@ export const ROOT_CSS=`
 #ym-root :is(.ym-facebook-window,.ym-src-facebook) summary{color:#1b3f8f}
 #ym-root :is(.ym-facebook-window,.ym-src-facebook) .contact-unread{background:#1b3f8f;border-color:#1b3f8f;color:#fff}
 #ym-root .ym-facebook-window .contact-search input{border-color:#8ea6d8}
+/* Telegram: Telegram blue. */
+#ym-root .ym-telegram-window{--title1:#a9dcf7;--title2:#1c93d3;--title3:#3fb0ec;border-color:#1b7fb6}
+#ym-root .ym-telegram-window>.titlebar{background:linear-gradient(var(--title1),var(--title2) 48%,#1b7fb6 72%,var(--title3));border-top-color:#d4eefc}
+#ym-root .ym-telegram-window .my-profile{background:linear-gradient(#f3fafe,#dcf0fb)}
+#ym-root :is(.ym-telegram-window,.ym-src-telegram) summary{color:#1677ad}
+#ym-root :is(.ym-telegram-window,.ym-src-telegram) .contact-unread{background:#2aabee;border-color:#2aabee;color:#fff}
+#ym-root .ym-telegram-window .contact-search input{border-color:#a9dcf7}
 #ym-root .ym-channel-status{display:block;width:100%;margin:0;padding:8px 12px;border:0;background:none;text-align:left;color:#555;font:italic 11px Tahoma,sans-serif;cursor:pointer}
 #ym-root .ym-channel-status:hover{background:#eef2fa;color:#1b3f8f}
 /* Combined buddy list (buddy-tabs.mjs): a tab per app in Yahoo's buddy window, one scroll box. */
@@ -98,15 +106,29 @@ export const ROOT_CSS=`
 #ym-root .ym-buddy-tab:not([data-tab=all]):not([aria-selected=true])>span:not(.ym-tab-unread){display:none}
 #ym-root .ym-tab-unread{min-width:13px;padding:0 3px;border-radius:7px;background:#d93025;color:#fff;font:bold 9px/13px Tahoma,sans-serif;text-align:center}
 #ym-root .ym-tab-unread[hidden],#ym-root .ym-source[hidden],#ym-root .ym-source-head[hidden]{display:none}
+/* Tất cả opens a list of apps to show in it; the arrow turns red while some are left out. */
+#ym-root .ym-buddy-tab[data-tab=all]::after{content:"▾";font-size:9px}
+#ym-root .ym-buddy-tab[data-ym-filtered]::after{color:#d93025}
+#ym-root .ym-app-anchor{position:relative;z-index:30;height:0}
+#ym-root .ym-app-picker{position:absolute;top:0;left:5px;min-width:140px;padding:3px 0;border:1px solid #8f7aa6;background:#fff;box-shadow:2px 2px 5px rgba(0,0,0,.25);font:11px Tahoma,sans-serif}
+#ym-root .ym-app-picker[hidden]{display:none}
+#ym-root .ym-app-picker-title{padding:2px 8px 3px;color:#7a6a8c;font-size:10px}
+#ym-root .ym-app-pick{display:flex;align-items:center;gap:5px;padding:3px 8px;color:#333;cursor:pointer}
+#ym-root .ym-app-pick:hover{background:#e8def3}
+#ym-root .ym-app-pick input{margin:0}
+#ym-root .ym-app-pick img{width:14px;height:14px}
 #ym-root .ym-combined{margin-top:0}
 #ym-root .ym-combined .ym-source>.contacts{flex:none!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0;border:0!important;background:none;box-shadow:none;overflow:visible!important}
 #ym-root .ym-source-head{display:flex;align-items:center;gap:5px;width:100%;margin:0;padding:4px 6px;border:0;border-bottom:1px solid #d9cfe6;background:linear-gradient(#f6f1fb,#e8def3);color:#5b338e;font:bold 11px Tahoma,sans-serif;text-align:left;cursor:pointer}
 #ym-root .ym-source-head img{width:14px;height:14px}
 #ym-root .ym-src-zalo>.ym-source-head{background:linear-gradient(#f3f8ff,#e3efff);color:#0b3d91;border-bottom-color:#c4dafa}
 #ym-root .ym-src-facebook>.ym-source-head{background:linear-gradient(#f5f7fb,#e4e9f4);color:#1b3f8f;border-bottom-color:#c6d3ee}
+#ym-root .ym-src-telegram>.ym-source-head{background:linear-gradient(#f3fafe,#dcf0fb);color:#1677ad;border-bottom-color:#bfe4f8}
 /* Folded app in Tất cả: only its heading stays. */
 /* Folding is for Tất cả only: a single-app tab always shows that app. */
 #ym-root .ym-combined[data-tab="all"] .ym-source[data-folded]>:not(.ym-source-head){display:none}
+/* Chưa đọc also sits on the Zalo, Facebook and Telegram tabs, and folds there too. */
+#ym-root .ym-combined .ym-unread-source[data-folded]>:not(.ym-source-head){display:none}
 #ym-root .ym-fold{display:inline-block;width:9px;font-size:9px;transition:transform .15s}
 #ym-root .ym-source[data-folded] .ym-fold{transform:rotate(-90deg)}
 /* Chưa đọc: copies of unread rows from every app, each with its app badge. */
@@ -118,7 +140,15 @@ export const ROOT_CSS=`
 #ym-root .ym-unread-row[data-app=yahoo] .tiny-avatar::after{content:'Y';background:#6a35b2}
 #ym-root .ym-unread-row[data-app=zalo] .tiny-avatar::after{content:'Z';background:#0068ff}
 #ym-root .ym-unread-row[data-app=facebook] .tiny-avatar::after{content:'f';background:#1b3f8f}
+#ym-root .ym-unread-row[data-app=telegram] .tiny-avatar::after{content:'➤';background:#2aabee;font-size:7px}
 #ym-root .ym-unread-row.contact-row b{color:inherit}
+#ym-root .ym-combined .contact-row[data-ym-unread-attention] .contact-first b{
+  background-color:#ffe28a;color:#432c0d;border-radius:2px;animation:ym-contact-unread-pulse 1.4s ease-in-out infinite
+}
+@keyframes ym-contact-unread-pulse{50%{background-color:#fff6dc}}
+@media (prefers-reduced-motion:reduce){
+  #ym-root .ym-combined .contact-row[data-ym-unread-attention] .contact-first b{animation:none}
+}
 #ym-root .ym-join-note{color:#888;font-size:10px}
 #ym-root .ym-combined[data-tab=all] .ym-src-yahoo .tiny-avatar{position:relative;overflow:visible}
 #ym-root .ym-combined[data-tab=all] .ym-src-yahoo .tiny-avatar::after{content:'Y';position:absolute;right:-4px;bottom:-4px;width:12px;height:12px;border:1px solid #fff;border-radius:50%;background:#6a35b2;color:#fff;font:bold 8px/12px Tahoma,sans-serif;text-align:center}
@@ -159,10 +189,27 @@ export const ROOT_CSS=`
 #ym-root .group-actions[hidden]{display:none!important}
 /* Zalo's own dialogs (Tạo nhóm, Thêm bạn…) open from the Yahoo desktop: show them above it. */
 body>.zl-modal{z-index:2147483200!important}
-#ym-root .ym-facebook-chat .ym-fb-photos{display:block;margin:3px 0 2px}
-#ym-root .ym-facebook-chat .ym-fb-photos img{max-width:220px;max-height:180px;margin:0 4px 4px 0;border:1px solid #c9c9c9;border-radius:3px;vertical-align:top;background:#f4f4f4}
-#ym-root .ym-facebook-chat .ym-reveal{margin-left:auto}
-#ym-root .ym-facebook-chat .ym-placeholder{color:#6d7fa8;font-style:italic}
+#ym-root .ym-source-chat .ym-src-photos{display:block;margin:3px 0 2px}
+#ym-root .ym-source-chat .ym-src-photos img{max-width:220px;max-height:180px;margin:0 4px 4px 0;border:1px solid #c9c9c9;border-radius:3px;vertical-align:top;background:#f4f4f4}
+#ym-root .ym-source-chat .ym-reveal{margin-left:auto}
+#ym-root .ym-source-chat .ym-placeholder{color:#6d7fa8;font-style:italic}
+/* Pictures pasted in a Facebook chat window, waiting above the text box until Send. */
+#ym-root .ym-source-chat .ym-paste-tray{flex:none;padding:4px 8px 6px;border-top:1px solid #d8d8d0;background:#fbfbf7;font:11px Tahoma,sans-serif;color:#333}
+#ym-root .ym-source-chat .ym-paste-tray[hidden]{display:none}
+#ym-root .ym-source-chat .ym-paste-head{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+#ym-root .ym-source-chat .ym-paste-head .mini-button{margin-left:auto}
+#ym-root .ym-source-chat .ym-paste-list{display:flex;gap:6px;overflow-x:auto}
+#ym-root .ym-source-chat .ym-paste-item{position:relative;flex:none}
+#ym-root .ym-source-chat .ym-paste-item img{display:block;width:64px;height:64px;object-fit:cover;border:1px solid #c9c9c9;border-radius:3px;background:#f4f4f4}
+#ym-root .ym-source-chat .ym-paste-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;padding:0;border:1px solid #888;border-radius:50%;background:#fff;color:#333;font:bold 11px/13px Arial,sans-serif;cursor:pointer}
+/* Facebook and Telegram text at 13px Arial, as YM shows a message at its default size ("10"); names at 15px like YM's. */
+#ym-root .ym-source-chat .messages .message-body{font:13px Arial,sans-serif}
+/* Telegram chat windows: Yahoo's chat window in Telegram blue. */
+#ym-root .ym-telegram-chat{--title1:#a9dcf7;--title2:#1c93d3;--title3:#3fb0ec;--purple:#1677ad;--light:#a9dcf7;border-color:#1b7fb6}
+#ym-root .ym-telegram-chat>.titlebar{background:linear-gradient(var(--title1),var(--title2) 48%,#1b7fb6 72%,var(--title3));border-top-color:#d4eefc}
+#ym-root .ym-telegram-chat .menubar{background:linear-gradient(#eff8fe,#dcf0fb);border-bottom-color:#a9dcf7}
+#ym-root .ym-telegram-chat .menubar button{color:#1677ad}
+#ym-root .ym-telegram-chat .sender:not(.me){color:#1677ad}
 /* Chat text can be selected and copied (Zalo's page turns selection off for what it does not mark). */
 #ym-root .messages,#ym-root .messages .message-line,#ym-root .messages .message-line *{-webkit-user-select:text;user-select:text}
 #ym-root .messages .message-line button{-webkit-user-select:none;user-select:none}

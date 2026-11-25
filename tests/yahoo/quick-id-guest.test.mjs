@@ -13,11 +13,11 @@ const routes=m=>{
   return {body:{authenticated:true,profile:profile(JSON.parse(m.body).nickname)}};
 };
 
-test('No Y! ID yet: the plugin makes a guest_ ID by itself (past a taken number) and signs in',async()=>{
+test('First load, no Y! ID yet: the plugin makes a guest_ ID by itself (past a taken number) and signs in',async()=>{
   // Fake server: guest_100000 is taken. rand is not injectable through boot, so match any guest_ nick.
   let first=true;
   const guestRoutes=m=>{if(m.path==='/api/auth/register'){const b=JSON.parse(m.body);if(first&&/^guest_\d{6}$/.test(b.nickname)){first=false;return {status:409,body:{error:'Nickname này đã có người dùng.'}};}}return routes(m);};
-  const {dom,d,requests,stored}=await zaloWithDesktop({routes:guestRoutes,stored:{ymAutoGuest:true}});
+  const {dom,d,requests,stored}=await zaloWithDesktop({routes:guestRoutes,stored:{ymAutoGuest:undefined}});
   try{
     const root=d.getElementById('ym-root'),registers=()=>requests.filter(m=>m.path==='/api/auth/register'),logins=()=>requests.filter(m=>m.path==='/api/auth/login');
     await until(()=>logins().length===1,8000);

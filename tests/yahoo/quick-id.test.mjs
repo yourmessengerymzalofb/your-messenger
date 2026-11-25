@@ -33,7 +33,7 @@ test('Signed out: a guest Yahoo! Messenger with Zalo/Facebook tabs; one click cr
     assert.ok('ymGuest' in root.dataset,'guest mode: Yahoo sign-in window hidden');
     assert.ok(guest,'guest Yahoo! Messenger window on the desktop');
     assert.equal(guest.querySelector('.titlebar .brand').textContent,'YM!','the guest window is YM!, not "Y! MESSENGER"');
-    assert.deepEqual([...guest.querySelectorAll('.ym-buddy-tab')].map(t=>t.title),['Tất cả','Y!','Zalo','Facebook']);
+    assert.deepEqual([...guest.querySelectorAll('.ym-buddy-tab')].map(t=>t.title),['Tất cả','Y!','Zalo','Facebook','Telegram']);
     assert.ok(guest.querySelector('.ym-src-zalo').contains(slot),'Zalo usable without a Yahoo! ID');
     const join=guest.querySelector('.ym-src-yahoo .ym-yahoo-join');
     assert.match(join.textContent,/BUZZ!!!, chơi game/);

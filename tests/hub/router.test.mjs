@@ -154,3 +154,31 @@ test('Compose: forwarded to the source; the tab comes forward only once New mess
   fb.client.postMessage({type:'composeResult',requestId:'req-compose-2',ok:true});await tick();
   assert.equal(JSON.stringify(r.tabs.at(-1)),JSON.stringify([3,{active:true}]));
 });
+
+test('More (Tải thêm): forwarded to the source without a key; the tab stays in the background',async()=>{
+  const r=await boot(),hub=r.open('yhub-hub',HUB,9),tg=r.open('yhub-source:telegram','https://web.telegram.org/a/',4);
+  tg.client.postMessage({type:'snapshot',state:'ready',entries:[],transcript:null});
+  hub.client.postMessage({type:'more',source:'telegram',requestId:'req-more-1',key:'#1'});
+  assert.equal(JSON.stringify(last(tg.server)),JSON.stringify({type:'more',key:'',requestId:'req-more-1'}));
+  tg.client.postMessage({type:'moreResult',requestId:'req-more-1',ok:false,reason:'end'});await tick();
+  const reply=last(hub.server);assert.deepEqual([reply.type,reply.source,reply.ok,reply.reason],['moreResult','telegram',false,'end']);
+  hub.client.postMessage({type:'more',source:'telegram',requestId:'req-more-2'});
+  tg.client.postMessage({type:'moreResult',requestId:'req-more-2',ok:true});await tick();
+  assert.equal(last(hub.server).ok,true);assert.equal(r.tabs.length,0,'never brought forward');
+});
+
+test('Send with pasted pictures: inline PNG/JPEG/WebP/GIF only, at most 4, and only to a source that takes them',async()=>{
+  const r=await boot(),hub=r.open('yhub-hub',HUB,9),fb=r.open('yhub-source:facebook','https://www.facebook.com/messages/t/1',3);
+  fb.client.postMessage({type:'snapshot',state:'ready',entries:[{key:'n:A',name:'A'}]});
+  const png='data:image/png;base64,iVBORw0KGgo=';
+  hub.client.postMessage({type:'send',source:'facebook',key:'n:A',text:'',images:[png,'data:text/html;base64,PGI+','https://x.example/a.png',png,png,png,png],requestId:'req-00000011'});
+  assert.deepEqual(last(fb.server),{type:'send',key:'n:A',requestId:'req-00000011',text:'',images:[png,png,png,png]});
+  hub.client.postMessage({type:'send',source:'facebook',key:'n:A',text:'',images:['data:image/svg+xml;base64,PHN2Zz4='],requestId:'req-00000012'});
+  assert.equal(last(fb.server).requestId,'req-00000011','nothing to send: not forwarded');
+  const tg=r.open('yhub-source:telegram','https://web.telegram.org/a/',4);
+  tg.client.postMessage({type:'snapshot',state:'ready',entries:[{key:'t:B',name:'B'}]});
+  hub.client.postMessage({type:'send',source:'telegram',key:'t:B',text:'',images:[png],requestId:'req-00000013'});
+  assert.equal(tg.server.sent.filter(m=>m.type==='send').length,0,'Telegram does not take pictures yet');
+  hub.client.postMessage({type:'send',source:'telegram',key:'t:B',text:'hi',images:[png],requestId:'req-00000014'});
+  assert.deepEqual(last(tg.server),{type:'send',key:'t:B',requestId:'req-00000014',text:'hi'});
+});
